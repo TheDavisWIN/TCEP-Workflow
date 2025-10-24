@@ -1,3 +1,7 @@
+/***********************************************************************************************************************
+ * Starting point for the program
+***********************************************************************************************************************/
+
 package utd.tcep.main;
 
 import javafx.application.Application;
@@ -8,16 +12,13 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-/**
- * JavaFX App
- */
 public class TCEPWorkflowApp extends Application {
 
     private static Scene scene;
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("/utd/tcep/tcep"), 640, 480);
+        scene = new Scene(loadFXML("/utd/tcep/main"), 640, 480);
         stage.setScene(scene);
         stage.show();
     }

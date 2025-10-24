@@ -4,7 +4,7 @@ module utdtcep {
     requires transitive javafx.graphics;
 
     opens utd.tcep.main to javafx.fxml;
-    opens utd.tcep to javafx.fxml;
-    exports utd.tcep;
+    opens utd.tcep.controllers to javafx.fxml;
     exports utd.tcep.main;
+    exports utd.tcep.controllers;
 }
