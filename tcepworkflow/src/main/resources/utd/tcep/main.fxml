@@ -62,9 +62,9 @@
                <children>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
                      <children>
-                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowView" prefHeight="80.0" text="Forms" userData="/tcep-workflow/src/main/resources/com/example/tcep.fxml" />
-                        <Button layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowView" prefHeight="80.0" text="Start Empty Form" />
-                        <Button layoutX="10.0" layoutY="90.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowView" prefHeight="80.0" text="Logout" />
+                        <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowFormTable" prefHeight="80.0" text="Forms" userData="/tcep-workflow/src/main/resources/com/example/tcep.fxml" />
+                        <Button layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowBlankForm" prefHeight="80.0" text="Start Empty Form" />
+                        <Button layoutX="10.0" layoutY="90.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogout" prefHeight="80.0" text="Logout" />
                      </children>
                      <GridPane.margin>
                         <Insets />
