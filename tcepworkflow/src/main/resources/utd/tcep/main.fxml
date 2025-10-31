@@ -42,6 +42,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
 
 <VBox prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.NavigationController">
   <children>
@@ -72,6 +73,14 @@
                   </VBox>
                   <VBox spacing="20.0" GridPane.columnIndex="1">
                      <children>
+                     <!--
+                    *** TESTING ONLY - REMOVE LATER ***
+                    This button calls NavigationController.onTestDbClicked() to prove the JavaFX UI
+                    can reach the MySQL/XAMPP database and read from the TCEP schema.
+                    Keep for demo / testing, safe to hide in production.
+                    -->
+                        <Button text="Test DB Connection" onAction="#onTestDbClicked" />
+                        <Label fx:id="dbStatus" text="DB: not tested yet" />
                         <TextField promptText="Search (UTD ID, NETID, etc.)" />
                         <TableView fx:id="formTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                           <columns>
