@@ -1,10 +1,12 @@
 /***********************************************************************************************************************
  * Handles navigation bar
+ * Ryan Pham
 ***********************************************************************************************************************/
 
 package utd.tcep.controllers;
 
 import java.io.IOException;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -19,12 +21,14 @@ public class NavigationController {
     private Node currentView;
 
     // Show the full form table
+    // Ryan Pham
     @FXML
     private void handleShowFormTable() throws IOException {
         swapView("/utd/tcep/formtableview");
     }
 
     // Create a new form with blank fields
+    // Ryan Pham
     @FXML
     private void handleShowBlankForm() throws IOException {
         swapView("/utd/tcep/formdetailedview");
@@ -32,12 +36,14 @@ public class NavigationController {
         FormDetailedController.currentForm = new TCEPForm();
     }
 
+    // Ryan Pham
     @FXML
     private void handleLogout() throws IOException {
         System.out.println("Logout");
     }
 
     // Swap between different views and load FXML when navigation buttons are clicked
+    // Ryan Pham
     private void swapView(String fxml) throws IOException {
         if (currentView != null)
         {
