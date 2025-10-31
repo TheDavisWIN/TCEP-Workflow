@@ -6,9 +6,13 @@ package utd.tcep.controllers;
 
 import java.io.IOException;
 import javafx.fxml.FXML;
+import utd.tcep.data.TCEPForm;
 
 public class FormDetailedController {
 
+    static public TCEPForm currentForm;
+
+    // Show form's change history
     @FXML
     private void handleViewHistory() throws IOException {
         
@@ -27,6 +31,10 @@ public class FormDetailedController {
     @FXML
     private void handleSendBack() throws IOException {
         
+    }
+    
+    public void loadForm() {
+
     }
 }
  

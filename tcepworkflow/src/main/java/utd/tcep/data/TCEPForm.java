@@ -8,7 +8,7 @@ import java.util.Date;
 
 public class TCEPForm {
     
-    enum Term {
+    public enum Term {
         Fall,
         Spring,
         Summer,
