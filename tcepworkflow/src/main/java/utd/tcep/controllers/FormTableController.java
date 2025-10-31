@@ -9,61 +9,95 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import utd.tcep.data.TCEPForm;
+import utd.tcep.db.TCEPDatabaseService;
 
 public class FormTableController {
 
-    // Switch to detailed form view with filled fields
+// from FXML
+    @FXML private TableView<TCEPForm> formTable;
+    @FXML private TableColumn<TCEPForm, String> studentNameCol;
+    @FXML private TableColumn<TCEPForm, String> utdIdCol;
+    @FXML private TableColumn<TCEPForm, String> netIdCol;
+    @FXML private TableColumn<TCEPForm, LocalDate> dateStartedCol;
+    @FXML private TableColumn<TCEPForm, String> statusCol;
+    @FXML private Label dbStatus;   // "DB: not tested yet"
+
     @FXML
-    private void openForm() throws IOException {
-        
+    public void initialize() {
+        // 1. bind columns to TCEPForm getters
+        studentNameCol.setCellValueFactory(new PropertyValueFactory<>("studentName"));
+        utdIdCol.setCellValueFactory(new PropertyValueFactory<>("utdId"));
+        netIdCol.setCellValueFactory(new PropertyValueFactory<>("netId"));
+        dateStartedCol.setCellValueFactory(new PropertyValueFactory<>("startedDate"));
+        statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        // 2. load data from DB
+        loadForms();
     }
 
-    @FXML
-    private Label dbStatus; // Shows "DB: connected (...)" or error message. **FOR TESTING - REMOVE LATER**
+    private void loadForms() {
+        ObservableList<TCEPForm> rows = FXCollections.observableArrayList();
 
-    /** ***FOR TESTING - REMOVE LATER***
-     *  Handler for the "Test DB Connection" button in main.fxml.     * 
-     *
-     *  - Opens a connection using TCEPDatabaseService (so we use the same settings everywhere).
-     *  - Runs a SELECT COUNT(*) on TCEP_Form: shows we can reach our actual app table.
-     *  - Runs SHOW TABLES: shows the schema exists even if the form table is still empty.
-     *  - Displays the result in the UI label so teammates/sponsor can see it without looking at console.
-     *
-     *  - This is a quick integration check between the JavaFX front end and the XAMPP/MySQL backend.
-     *  - Our TCEP_Form table might be empty during early development, so we also count tables to show “real” output.
-     */
-    @FXML
-    private void onTestDbClicked() {
-        String formCountSql = "SELECT COUNT(*) AS cnt FROM TCEP_Form";
-        String tableCountSql = "SHOW TABLES";
+        // this query ONLY uses columns we know exist right now
+        String sql =
+            "SELECT FormID, RequestDate, Term, Year, StudentID, StatusID " +
+            "FROM TCEP_Form";
 
-        try (Connection conn = utd.tcep.db.TCEPDatabaseService.getConnection();
-            PreparedStatement formPs = conn.prepareStatement(formCountSql);
-            PreparedStatement tablePs = conn.prepareStatement(tableCountSql)) {
+        try (Connection conn = TCEPDatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-            // Get form count
-            int formCount = 0;
-            try (ResultSet rs = formPs.executeQuery()) {
-                if (rs.next()) formCount = rs.getInt("cnt");
+            while (rs.next()) {
+                TCEPForm f = new TCEPForm();
+
+                int studentId = rs.getInt("StudentID");
+
+                // we don't have name / netid in this table yet, so fake them for now
+                f.setStudentName("Student " + studentId);
+                f.setUtdId(String.valueOf(studentId));
+                f.setNetId("net" + studentId);
+
+                // date
+                java.sql.Date d = rs.getDate("RequestDate");
+                if (d != null) {
+                    f.setStartedDate(d.toLocalDate());
+                }
+
+                // status – db only has StatusID, so show it
+                int statusId = rs.getInt("StatusID");
+                f.setStatus("Status " + statusId);
+
+                rows.add(f);
             }
 
-            // Get total number of tables
-            int tableCount = 0;
-            try (ResultSet rs = tablePs.executeQuery()) {
-                while (rs.next()) tableCount++;
-            }
+            formTable.setItems(rows);
 
-            // Display both results
-            String message = String.format("DB: ✅ connected (%d forms, %d tables)", formCount, tableCount);
-            dbStatus.setText(message);
-            System.out.println("✅ Database connected! " + message);
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ✅ loaded " + rows.size() + " form(s)");
+            }
 
         } catch (Exception e) {
-            dbStatus.setText("DB: ❌ not connected");
             e.printStackTrace();
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ❌ " + e.getMessage());
+            }
         }
+    }
+
+    // your test button in the UI can still call this
+    @FXML
+    private void onRefreshClicked() {
+        loadForms();
     }
     
 }

@@ -4,6 +4,7 @@
 
 package utd.tcep.data;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public class TCEPForm {
@@ -24,5 +25,26 @@ public class TCEPForm {
     public int incomingCourseID;
     public int equivalentCourseID;
     public int institutionID;
+
+    //Form Table View fields
+    private String studentName;   
+    private String utdId;         
+    private String netId;       
+    private LocalDate startedDate;
+    private String status;
+
+    // --- getters (required by TableView) ---
+    public String getStudentName() { return studentName; }
+    public String getUtdId()       { return utdId; }
+    public String getNetId()       { return netId; }
+    public LocalDate getStartedDate() { return startedDate; }
+    public String getStatus()      { return status; }
+
+    // --- setters (used by controller when mapping ResultSet) ---
+    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public void setUtdId(String utdId)             { this.utdId = utdId; }
+    public void setNetId(String netId)             { this.netId = netId; }
+    public void setStartedDate(LocalDate startedDate) { this.startedDate = startedDate; }
+    public void setStatus(String status)           { this.status = status; }
 
 }
