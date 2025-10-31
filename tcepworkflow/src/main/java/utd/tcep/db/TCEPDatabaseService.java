@@ -17,6 +17,7 @@ public class TCEPDatabaseService {
 
     // load the MySQL driver once when the class is first used.
     // This makes sure DriverManager knows about com.mysql.cj.jdbc.Driver.
+    // Jeffrey Chou
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
