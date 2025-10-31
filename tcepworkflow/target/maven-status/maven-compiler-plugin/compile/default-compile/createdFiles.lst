@@ -1,0 +1,9 @@
+utd/tcep/controllers/FormDetailedController.class
+utd/tcep/data/TCEPForm.class
+utd/tcep/data/TCEPForm$Term.class
+utd/tcep/controllers/FormTableController.class
+utd/tcep/main/TCEPWorkflowApp.class
+utd/tcep/controllers/NavigationController.class
+module-info.class
+utd/tcep/db/TCEPDatabaseService.class
+utd/tcep/data/FormTable.class
