@@ -32,6 +32,16 @@ public class FormTableController {
     @FXML private TableColumn<TCEPForm, String> statusCol;
     @FXML private Label dbStatus;   // "DB: not tested yet"
 
+/**
+ * Initializes the Form Table View after the FXML is loaded.
+ * <p>
+ * This method is automatically called by the JavaFX runtime once the
+ * corresponding FXML file (formtableview.fxml) is loaded.
+ * It binds each TableColumn to the corresponding property in the TCEPForm model
+ * using PropertyValueFactory, ensuring data from the database appears in the correct column.
+ * It also performs an initial call to loadForms() to populate the table when the scene is first displayed.
+ * written by Jeffrey Chou (jxc033200)
+ */
     @FXML
     public void initialize() {
         // 1. bind columns to TCEPForm getters
@@ -45,6 +55,17 @@ public class FormTableController {
         loadForms();
     }
 
+/**
+ * Retrieves form records from the MySQL database and populates the TableView.
+ * <p>
+ * Executes a SQL SELECT query on the TCEP_Form table (and related tables in the future).
+ * Each row from the ResultSet is converted into a TCEPForm object and added to an ObservableList,
+ * which is then bound to the TableView for display.
+ * <p>
+ * The method also updates the dbStatus Label with a summary of how many forms were retrieved.
+ * If no records are found, it displays "DB: connected (0 forms)" and optionally shows mock data.
+ * written by Jeffrey Chou (jxc033200)
+ */
     private void loadForms() {
         ObservableList<TCEPForm> rows = FXCollections.observableArrayList();
 
@@ -62,7 +83,7 @@ public class FormTableController {
 
                 int studentId = rs.getInt("StudentID");
 
-                // we don't have name / netid in this table yet, so fake them for now
+                // **Student NAME and NETID are placeholders** - (add attributes to TCEP Form? or JOIN)
                 f.setStudentName("Student " + studentId);
                 f.setUtdId(String.valueOf(studentId));
                 f.setNetId("net" + studentId);
@@ -94,7 +115,8 @@ public class FormTableController {
         }
     }
 
-    // your test button in the UI can still call this
+    // Handles refresh button. Calls loadForms to re-query the DB.
+    // Written by Jeffrey Chou (jxc033200)
     @FXML
     private void onRefreshClicked() {
         loadForms();

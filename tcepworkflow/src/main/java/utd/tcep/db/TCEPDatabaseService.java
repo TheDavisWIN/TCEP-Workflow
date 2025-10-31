@@ -17,6 +17,7 @@ public class TCEPDatabaseService {
 
     // load the MySQL driver once when the class is first used.
     // This makes sure DriverManager knows about com.mysql.cj.jdbc.Driver.
+    // written by Jeffrey Chou (jxc033200)
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -29,6 +30,7 @@ public class TCEPDatabaseService {
      * Returns a live JDBC connection to the local 'tcep' database.
      * @return Connection to MySQL.
      * @throws SQLException if the database is not reachable (service down, wrong port, wrong DB name, etc.)
+     * written by Jeffrey Chou (jxc033200)
      */
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASS);

@@ -33,6 +33,10 @@ public class TCEPForm {
     private LocalDate startedDate;
     private String status;
 
+    /**
+     * Getters and setters for table view fields
+     * Written by Jeffrey Chou (jxc033200)
+     */
     // --- getters (required by TableView) ---
     public String getStudentName() { return studentName; }
     public String getUtdId()       { return utdId; }
