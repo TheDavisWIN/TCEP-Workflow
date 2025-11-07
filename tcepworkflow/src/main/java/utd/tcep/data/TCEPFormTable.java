@@ -27,33 +27,26 @@ public class TCEPFormTable {
         rows.clear();
         // this query ONLY uses columns we know exist right now
         String sql =
-            "SELECT FormID, RequestDate, Term, Year, StudentID, StatusID " +
-            "FROM TCEP_Form";
+            "SELECT f.FormID, f.RequestDate, f.Term, f.Year, " +
+            "       f.StudentID, f.StatusID, f.NetID, s.Student_Name " +
+            "FROM TCEP_Form f " +
+            "JOIN Student s ON s.StudentID = f.StudentID " +
+            "ORDER BY f.RequestDate DESC";
 
         Connection conn = TCEPDatabaseService.getConnection();
         PreparedStatement ps = conn.prepareStatement(sql);
         ResultSet rs = ps.executeQuery();
 
         while (rs.next()) {
-            TCEPForm f = new TCEPForm();
-
-            int studentId = rs.getInt("StudentID");
-
-            // **Student NAME and NETID are placeholders** - (add attributes to TCEP Form? or JOIN)
-            f.setStudentName("Student " + studentId);
-            f.setUtdId(String.valueOf(studentId));
-            f.setNetId("net" + studentId);
-
-            // date
+            TCEPForm f = new TCEPForm(); 
+            f.setStudentName(rs.getString("Student_Name"));    
+            f.setUtdId(String.valueOf(rs.getInt("StudentID")));    
+            f.setNetId(rs.getString("NetID"));
             java.sql.Date d = rs.getDate("RequestDate");
             if (d != null) {
                 f.setStartedDate(d.toLocalDate());
             }
-
-            // status – db only has StatusID, so show it
-            int statusId = rs.getInt("StatusID");
-            f.setStatus("Status " + statusId);
-
+            f.setStatus(String.valueOf(rs.getInt("StatusID")));
             rows.add(f);
         }
     }
