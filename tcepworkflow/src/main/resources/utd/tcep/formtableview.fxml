@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="formTableContainer" prefHeight="466.0" prefWidth="781.0" spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormTableController">
+   <children>
+      <Button onAction="#onRefreshClicked" text="Refresh" />
+      <Label fx:id="dbStatus" text="DB: not tested yet" />
+      <TextField promptText="Search (UTD ID, NETID, etc.)" />
+      <TableView fx:id="formTable" prefHeight="298.0" prefWidth="755.0" VBox.vgrow="ALWAYS">
+         <columns>
+            <TableColumn fx:id="studentNameCol" prefWidth="150.0" text="Student Name" />
+            <TableColumn fx:id="utdIdCol" minWidth="0.0" prefWidth="337.71429443359375" text="UTD ID" />
+            <TableColumn fx:id="netIdCol" minWidth="0.0" prefWidth="282.2857971191406" text="Net ID" />
+            <TableColumn fx:id="dateStartedCol" minWidth="0.0" prefWidth="247.0" text="Date Started" />
+            <TableColumn fx:id="statusCol" maxWidth="574.0" minWidth="0.0" prefWidth="222.0" text="Status" />
+         </columns>
+      </TableView>
+   </children>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+</VBox>

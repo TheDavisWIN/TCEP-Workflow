@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="formViewContainer" prefHeight="915.0" prefWidth="733.0" spacing="25" style="-fx-padding: 30;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormDetailedController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="20">
+         <children>
+            <Button onAction="#handleViewHistory" style="-fx-text-fill: black;" text="View History" />
+         </children>
+      </HBox>
+      <HBox alignment="CENTER_LEFT" spacing="30">
+         <children>
+            <VBox spacing="10">
+               <children>
+                  <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="ECS TCEP FORM" />
+               </children>
+            </VBox>
+            <Region visible="false" HBox.hgrow="ALWAYS" />
+            <VBox alignment="TOP_RIGHT" spacing="5">
+               <children>
+                  <Label style="-fx-font-size: 14px;" text="Started: October 26, 2025" />
+                  <Label style="-fx-font-size: 14px;" text="By: First Last" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <VBox spacing="25" VBox.vgrow="ALWAYS">
+         <children>
+            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Student Name:" />
+            <HBox spacing="10">
+               <children>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="firstNameField" prefWidth="150" />
+                        <Label text="First" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="lastNameField" prefWidth="150" />
+                        <Label text="Last" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="miField" prefWidth="60" />
+                        <Label text="M.I." />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Student ID:" />
+            <VBox>
+               <children>
+                  <TextField fx:id="studentIdField" prefWidth="300" />
+                  <Label text="Student ID / NetID" />
+               </children>
+            </VBox>
+            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Original Course (Transfer From):" />
+            <HBox spacing="10">
+               <children>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="origCourseNum" prefWidth="120" />
+                        <Label text="Course Number" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="origCourseTitle" prefWidth="250" />
+                        <Label text="Course Title" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="origCreditHours" prefWidth="120" />
+                        <Label text="# of Credit Hours" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Source Institution:" />
+            <HBox spacing="10">
+               <children>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="sourceInstitutionName" prefWidth="250" />
+                        <Label text="Institution Name" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="sourceInstitutionLocation" prefWidth="200" />
+                        <Label text="Institution Location" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Transfer As (UTD Equivalent):" />
+            <HBox spacing="10">
+               <children>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="equivalentCourse" prefWidth="150" />
+                        <Label text="Equivalent Course" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="satisfiedRequirement" prefWidth="150" />
+                        <Label text="Satisfied Requirement" />
+                     </children>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <TextField fx:id="coreDesignation" prefWidth="150" />
+                        <Label text="Core Designation" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <HBox alignment="CENTER" spacing="20" style="-fx-padding: 30 0 0 0;">
+         <children>
+            <Button fx:id="acceptButton" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Accept" onAction="#handleAccept" HBox.hgrow="ALWAYS" />
+            <Button fx:id="denyButton" maxWidth="Infinity" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-weight: bold;" text="Deny" onAction="#handleDeny" HBox.hgrow="ALWAYS" />
+            <Button fx:id="sendBackButton" maxWidth="Infinity" style="-fx-background-color: #9E9E9E; -fx-text-fill: white; -fx-font-weight: bold;" text="Send Back" onAction="#handleSendBack" HBox.hgrow="ALWAYS" />
+         </children>
+      </HBox>
+   </children>
+</VBox>
