@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="formViewContainer" prefHeight="915.0" prefWidth="733.0" spacing="25" style="-fx-padding: 30;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="formViewContainer" prefHeight="915.0" prefWidth="733.0" spacing="25" style="-fx-padding: 30;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormDetailedController">
    <children>
       <HBox alignment="CENTER_LEFT" spacing="20">
          <children>
@@ -24,8 +24,8 @@
             <Region visible="false" HBox.hgrow="ALWAYS" />
             <VBox alignment="TOP_RIGHT" spacing="5">
                <children>
-                  <Label style="-fx-font-size: 14px;" text="Started: October 26, 2025" />
-                  <Label style="-fx-font-size: 14px;" text="By: First Last" />
+                  <Label fx:id="startedDateLabel" style="-fx-font-size: 14px;" text="Started: " />
+                  <Label fx:id="formStartedByLabel" style="-fx-font-size: 14px;" text="By: " />
                </children>
             </VBox>
          </children>
@@ -67,19 +67,19 @@
                <children>
                   <VBox>
                      <children>
-                        <TextField fx:id="origCourseNum" prefWidth="120" />
+                        <TextField fx:id="origCourseNumField" prefWidth="120" />
                         <Label text="Course Number" />
                      </children>
                   </VBox>
                   <VBox>
                      <children>
-                        <TextField fx:id="origCourseTitle" prefWidth="250" />
+                        <TextField fx:id="origCourseTitleField" prefWidth="250" />
                         <Label text="Course Title" />
                      </children>
                   </VBox>
                   <VBox>
                      <children>
-                        <TextField fx:id="origCreditHours" prefWidth="120" />
+                        <TextField fx:id="origCreditHoursField" prefWidth="120" />
                         <Label text="# of Credit Hours" />
                      </children>
                   </VBox>
@@ -90,13 +90,13 @@
                <children>
                   <VBox>
                      <children>
-                        <TextField fx:id="sourceInstitutionName" prefWidth="250" />
+                        <TextField fx:id="sourceInstitutionNameField" prefWidth="250" />
                         <Label text="Institution Name" />
                      </children>
                   </VBox>
                   <VBox>
                      <children>
-                        <TextField fx:id="sourceInstitutionLocation" prefWidth="200" />
+                        <TextField fx:id="sourceInstitutionLocationField" prefWidth="200" />
                         <Label text="Institution Location" />
                      </children>
                   </VBox>
@@ -107,19 +107,19 @@
                <children>
                   <VBox>
                      <children>
-                        <TextField fx:id="equivalentCourse" prefWidth="150" />
+                        <TextField fx:id="equivalentCourseField" prefWidth="150" />
                         <Label text="Equivalent Course" />
                      </children>
                   </VBox>
                   <VBox>
                      <children>
-                        <TextField fx:id="satisfiedRequirement" prefWidth="150" />
+                        <TextField fx:id="satisfiedRequirementField" prefWidth="150" />
                         <Label text="Satisfied Requirement" />
                      </children>
                   </VBox>
                   <VBox>
                      <children>
-                        <TextField fx:id="coreDesignation" prefWidth="150" />
+                        <TextField fx:id="coreDesignationField" prefWidth="150" />
                         <Label text="Core Designation" />
                      </children>
                   </VBox>

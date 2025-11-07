@@ -5,27 +5,25 @@
 
 package utd.tcep.controllers;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
+import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import utd.tcep.data.TCEPForm;
-import utd.tcep.db.TCEPDatabaseService;
+import utd.tcep.data.TCEPFormTable;
+import utd.tcep.events.NavigationRequestEvent;
 
 public class FormTableController {
 
-// from FXML
-    @FXML private TableView<TCEPForm> formTable;
+    // from FXML
+    @FXML public TableView<TCEPForm> formTable;
     @FXML private TableColumn<TCEPForm, String> studentNameCol;
     @FXML private TableColumn<TCEPForm, String> utdIdCol;
     @FXML private TableColumn<TCEPForm, String> netIdCol;
@@ -33,16 +31,23 @@ public class FormTableController {
     @FXML private TableColumn<TCEPForm, String> statusCol;
     @FXML private Label dbStatus;   // "DB: not tested yet"
 
-/**
- * Initializes the Form Table View after the FXML is loaded.
- * <p>
- * This method is automatically called by the JavaFX runtime once the
- * corresponding FXML file (formtableview.fxml) is loaded.
- * It binds each TableColumn to the corresponding property in the TCEPForm model
- * using PropertyValueFactory, ensuring data from the database appears in the correct column.
- * It also performs an initial call to loadForms() to populate the table when the scene is first displayed.
- * written by Jeffrey Chou (jxc033200)
- */
+    private TCEPFormTable formTableObject = new TCEPFormTable();
+
+    // Written by Ryan Pham (rkp200003)
+    public TCEPFormTable getFormTableObject() {
+        return formTableObject;
+    }
+
+    /**
+     * Initializes the Form Table View after the FXML is loaded.
+     * <p>
+     * This method is automatically called by the JavaFX runtime once the
+     * corresponding FXML file (formtableview.fxml) is loaded.
+     * It binds each TableColumn to the corresponding property in the TCEPForm model
+     * using PropertyValueFactory, ensuring data from the database appears in the correct column.
+     * It also performs an initial call to loadForms() to populate the table when the scene is first displayed.
+     * written by Jeffrey Chou (jxc033200) and Ryan Pham (rkp200003)
+     */
     @FXML
     public void initialize() {
         // 1. bind columns to TCEPForm getters
@@ -51,63 +56,36 @@ public class FormTableController {
         netIdCol.setCellValueFactory(new PropertyValueFactory<>("netId"));
         dateStartedCol.setCellValueFactory(new PropertyValueFactory<>("startedDate"));
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+        
+        // 2. bind form table to controller
+        formTable.setRowFactory(table -> {
+            TableRow<TCEPForm> row = new TableRow<>();
 
-        // 2. load data from DB
-        loadForms();
-    }
-
-/**
- * Retrieves form records from the MySQL database and populates the TableView.
- * <p>
- * Executes a SQL SELECT query on the TCEP_Form table (and related tables in the future).
- * Each row from the ResultSet is converted into a TCEPForm object and added to an ObservableList,
- * which is then bound to the TableView for display.
- * <p>
- * The method also updates the dbStatus Label with a summary of how many forms were retrieved.
- * If no records are found, it displays "DB: connected (0 forms)" and optionally shows mock data.
- * written by Jeffrey Chou (jxc033200)
- */
-    private void loadForms() {
-        ObservableList<TCEPForm> rows = FXCollections.observableArrayList();
-
-        // this query ONLY uses columns we know exist right now
-        String sql =
-            "SELECT FormID, RequestDate, Term, Year, StudentID, StatusID " +
-            "FROM TCEP_Form";
-
-        try (Connection conn = TCEPDatabaseService.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                TCEPForm f = new TCEPForm();
-
-                int studentId = rs.getInt("StudentID");
-
-                // **Student NAME and NETID are placeholders** - (add attributes to TCEP Form? or JOIN)
-                f.setStudentName("Student " + studentId);
-                f.setUtdId(String.valueOf(studentId));
-                f.setNetId("net" + studentId);
-
-                // date
-                java.sql.Date d = rs.getDate("RequestDate");
-                if (d != null) {
-                    f.setStartedDate(d.toLocalDate());
-                }
-
-                // status – db only has StatusID, so show it
-                int statusId = rs.getInt("StatusID");
-                f.setStatus("Status " + statusId);
-
-                rows.add(f);
+            if (row.getItem() != null)
+            {
+                row.setCursor(Cursor.HAND);
             }
 
-            formTable.setItems(rows);
+            row.setOnMouseClicked(event -> {
+                System.out.println(row.getItem());
+                if (event.getButton() == MouseButton.PRIMARY && row.getItem() != null)
+                {
+                    formTable.fireEvent(new NavigationRequestEvent(row.getItem()));
+                }
+            });
+
+            return row;
+        });
+
+        formTable.setItems(formTableObject.rows);
+
+        // 3. load data from DB
+        try {
+            formTableObject.loadForms();
 
             if (dbStatus != null) {
-                dbStatus.setText("DB: ✅ loaded " + rows.size() + " form(s)");
+                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             if (dbStatus != null) {
@@ -120,8 +98,11 @@ public class FormTableController {
     // Written by Jeffrey Chou (jxc033200)
     @FXML
     private void onRefreshClicked() {
-        loadForms();
+        try {
+            formTableObject.loadForms();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    
 }
  

@@ -5,7 +5,6 @@
 package utd.tcep.data;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 public class TCEPForm {
     
@@ -16,8 +15,7 @@ public class TCEPForm {
         Other
     }
 
-    public int studentID;
-    public Date requestDate;
+    public LocalDate requestDate;
     public Term term;
     public int year;
     public String degreeRequirement;
