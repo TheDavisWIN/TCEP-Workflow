@@ -1,4 +1,9 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/events/NavigationRequestEvent.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/TCEPFormTable.java
+>>>>>>> Stashed changes
 =======
 /Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/events/NavigationRequestEvent.java
 /Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/TCEPFormTable.java
@@ -8,7 +13,10 @@
 /Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/FormDetailedController.java
 /Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/NavigationController.java
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 /Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/FormTable.java
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 /Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/main/TCEPWorkflowApp.java
