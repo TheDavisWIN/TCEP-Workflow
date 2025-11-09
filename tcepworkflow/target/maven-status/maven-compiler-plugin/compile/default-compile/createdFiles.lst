@@ -5,5 +5,7 @@ utd/tcep/controllers/FormTableController.class
 utd/tcep/main/TCEPWorkflowApp.class
 utd/tcep/controllers/NavigationController.class
 module-info.class
+utd/tcep/events/NavigationRequestEvent.class
 utd/tcep/db/TCEPDatabaseService.class
-utd/tcep/data/FormTable.class
+utd/tcep/controllers/NavigationController$View.class
+utd/tcep/data/TCEPFormTable.class

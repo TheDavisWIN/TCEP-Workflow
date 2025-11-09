@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 /Users/benelli/Downloads/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/FormTableController.java
 /Users/benelli/Downloads/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/main/TCEPWorkflowApp.java
 /Users/benelli/Downloads/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/TCEPForm.java
@@ -6,3 +7,14 @@
 /Users/benelli/Downloads/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/FormTable.java
 /Users/benelli/Downloads/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/NavigationController.java
 /Users/benelli/Downloads/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/FormDetailedController.java
+=======
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/events/NavigationRequestEvent.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/TCEPFormTable.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/db/TCEPDatabaseService.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/FormTableController.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/FormDetailedController.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/controllers/NavigationController.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/main/TCEPWorkflowApp.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/module-info.java
+/Users/benelli/Documents/GitHub/TCEP-Workflow/tcepworkflow/src/main/java/utd/tcep/data/TCEPForm.java
+>>>>>>> Stashed changes
