@@ -12,6 +12,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import utd.tcep.data.TCEPForm;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
@@ -20,30 +21,44 @@ public class NavigationController {
 
     public enum View {
         Detailed,
-        Table
+        Table,
+        Login
     }
 
     @FXML
     private GridPane appGridPane;
     private Node formDetailedView;
     private Node formTableView;
+    private Node loginView;
+    @FXML
+    private VBox navigationBar;
     private FormDetailedController formDetailedController;
     private FormTableController formTableController;
+    private LoginController loginController;
 
     // Automatically called on program start, saving controllers for future method calls
     // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added Login view)
     @FXML
     public void initialize() throws IOException {
         FXMLLoader formDetailedViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdetailedview.fxml"));
         FXMLLoader formTableViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formtableview.fxml"));
+        FXMLLoader loginViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/loginview.fxml"));
         formDetailedView = formDetailedViewLoader.load();
         formTableView = formTableViewLoader.load();
+        loginView = loginViewLoader.load();
+        appGridPane.getChildren().add(loginView);
         appGridPane.getChildren().add(formDetailedView);
         appGridPane.getChildren().add(formTableView);
+        GridPane.setColumnIndex(loginView, 1);
         GridPane.setColumnIndex(formDetailedView, 1);
         GridPane.setColumnIndex(formTableView, 1);
         formDetailedController = formDetailedViewLoader.getController();
         formTableController = formTableViewLoader.getController();
+        loginController = loginViewLoader.getController();
+        loginController.setNavigationController(this);
+
+        swapView(View.Login);
 
         formTableController.formTable.addEventHandler(NavigationRequestEvent.REQUEST, event -> {
             swapView(View.Detailed);
@@ -69,24 +84,50 @@ public class NavigationController {
     }
 
     // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added logout functionality)
     @FXML
     private void handleLogout() throws IOException {
+        swapView(View.Login);
+        navigationBar.setVisible(false);
         System.out.println("Logout");
+        loginController.resetFields();
+    }
+
+    // Called when login is successful
+    // Davis Huynh (dxh170005)
+    public void onLoginSuccess() {
+        navigationBar.setVisible(true);
+        swapView(View.Table);
+    }
+
+    // Show or hide the navigation bar
+    // Davis Huynh (dxh170005)
+    public void showNavigationBar(boolean show) {
+        if (navigationBar != null) {
+            navigationBar.setVisible(show);
+        }
     }
 
     // Swap between different views and load FXML when navigation buttons are clicked
     // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added Login view)
     public void swapView(View view) {
+        loginView.setVisible(false);
+        formDetailedView.setVisible(false);
+        formTableView.setVisible(false);
+
         switch (view) {
+            case Login:
+                loginView.setVisible(true);
+                break;
             case Detailed:
                 formDetailedView.setVisible(true);
-                formTableView.setVisible(false);
                 break;
             case Table:
-                formDetailedView.setVisible(false);
                 formTableView.setVisible(true);
                 break;
         }
     }
+
 }
  

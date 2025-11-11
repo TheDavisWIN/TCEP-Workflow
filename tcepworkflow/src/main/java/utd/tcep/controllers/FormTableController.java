@@ -7,6 +7,9 @@ package utd.tcep.controllers;
 
 import java.time.LocalDate;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -14,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import utd.tcep.data.TCEPForm;
@@ -30,7 +34,10 @@ public class FormTableController {
     @FXML private TableColumn<TCEPForm, LocalDate> dateStartedCol;
     @FXML private TableColumn<TCEPForm, String> statusCol;
     @FXML private Label dbStatus;   // "DB: not tested yet"
+    @FXML private TextField searchField;
 
+    private ObservableList<TCEPForm> masterData = FXCollections.observableArrayList();
+    private FilteredList<TCEPForm> filteredData;
     private TCEPFormTable formTableObject = new TCEPFormTable();
 
     // Written by Ryan Pham (rkp200003)
@@ -77,11 +84,14 @@ public class FormTableController {
             return row;
         });
 
-        formTable.setItems(formTableObject.rows);
+        filteredData = new FilteredList<>(masterData, p -> true); 
+        formTable.setItems(filteredData);
 
         // 3. load data from DB
         try {
             formTableObject.loadForms();
+            masterData.clear();
+            masterData.addAll(formTableObject.rows);
 
             if (dbStatus != null) {
                 dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
@@ -104,5 +114,22 @@ public class FormTableController {
             e.printStackTrace();
         }
     }
+
+    // Handles search field input to filter the table
+    // Written by Davis Huynh (dxh170005)
+    @FXML
+    private void onSearchChanged() {
+        String search = searchField.getText().toLowerCase();
+
+        if (filteredData != null) {
+            filteredData.setPredicate(f -> {
+                if (search == null || search.isEmpty()) return true;
+                return f.getStudentName().toLowerCase().contains(search)
+                        || f.getUtdId().toLowerCase().contains(search)
+                        || f.getNetId().toLowerCase().contains(search);
+            });
+        }
+    }
+
 }
  
