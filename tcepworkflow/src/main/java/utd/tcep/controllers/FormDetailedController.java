@@ -6,10 +6,14 @@
 package utd.tcep.controllers;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import utd.tcep.data.TCEPForm;
+import utd.tcep.db.TCEPDatabaseService;
 
 public class FormDetailedController {
 
@@ -114,6 +118,7 @@ public class FormDetailedController {
     // Written by Ryan Pham (rkp200003)
     public void setForm(TCEPForm form) {
         currentForm = form;
+        String studentID = form.getUtdId();
 
         clearForm();
 
@@ -125,19 +130,48 @@ public class FormDetailedController {
             lastNameField.setText(nameSplit[1]);
         }
 
-        // origCourseNumField.setText(form.orig);
-        // origCourseTitleField.setText();
-        // origCreditHoursField.setText();
-        // sourceInstitutionNameField.setText();
-        // sourceInstitutionLocationField.setText();
-        // equivalentCourseField.setText();
-        // satisfiedRequirementField.setText();
-        // coreDesignationField.setText();
+        loadByID(studentID);
     }
 
     // Written by Ryan Pham (rkp200003)
     public TCEPForm getForm() {
         return currentForm;
     }
+
+    // Load form data from database by student ID and populate fields
+    // Written by Davis Huynh (dxh170005)
+    public void loadByID(String studentId) {
+        String sql = "SELECT f.StudentID, s.Student_Name, f.Degree_Requirement, f.Core_Designation, "
+                + "f.Incoming_CourseID, ic.CourseName AS IncomingCourseName, ic.CourseNumber AS IncomingCourseNumber,"
+                + "f.Equivalent_CourseID, ec.CourseName AS EquivalentCourseName, "
+                + "f.InstitutionID, inst.Institution_Name AS InstitutionName "
+                + "FROM tcep_form f "
+                + "LEFT JOIN student s ON f.StudentID = s.StudentID "
+                + "LEFT JOIN incoming_course ic ON f.Incoming_CourseID = ic.Incoming_CourseID "
+                + "LEFT JOIN equivalent_course ec ON f.Equivalent_CourseID = ec.Equivalent_CourseID "
+                + "LEFT JOIN institution inst ON f.InstitutionID = inst.InstitutionID "
+                + "WHERE f.StudentID = ?";
+
+        try (Connection conn = TCEPDatabaseService.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, studentId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                studentIdField.setText(rs.getString("StudentID") != null ? rs.getString("StudentID") : "");
+                origCourseNumField.setText(rs.getString("IncomingCourseNumber") != null ? rs.getString("IncomingCourseNumber") : "");
+                origCourseTitleField.setText(rs.getString("IncomingCourseName") != null ? rs.getString("IncomingCourseName") : "");
+                sourceInstitutionNameField.setText(rs.getString("InstitutionName") != null ? rs.getString("InstitutionName") : "");
+                equivalentCourseField.setText(rs.getString("EquivalentCourseName") != null ? rs.getString("EquivalentCourseName") : "");
+                satisfiedRequirementField.setText(rs.getString("Degree_Requirement") != null ? rs.getString("Degree_Requirement") : "");
+                coreDesignationField.setText(rs.getString("Core_Designation") != null ? rs.getString("Core_Designation") : "");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
  

@@ -26,7 +26,7 @@ public class TCEPWorkflowApp extends Application {
         stage.show();
 
         navigationController = fxmlLoader.getController();
-        navigationController.swapView(NavigationController.View.Table);
+        navigationController.swapView(NavigationController.View.Login);
     }
 
     public static void main(String[] args) {
