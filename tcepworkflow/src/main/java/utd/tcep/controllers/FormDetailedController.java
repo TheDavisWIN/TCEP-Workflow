@@ -21,6 +21,7 @@ import javafx.scene.control.ComboBox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import utd.tcep.data.TCEPForm;
+import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
 
 public class FormDetailedController {
@@ -61,13 +62,6 @@ public class FormDetailedController {
     @FXML private Button confirmDenialButton;
     @FXML private Button confirmSendBackButton;
 
-    static public TCEPForm currentForm;
-    private NavigationController navigationController;
-
-    public void setNavigationController(NavigationController nav) {
-        this.navigationController = nav;
-    }
-    
     // Setup property listeners for fields in the form
     // Written by Ryan Pham (rkp200003)
     @FXML
@@ -258,9 +252,12 @@ public class FormDetailedController {
         System.out.println("Approval confirmed. Reason: " + reason + ", Recipient: " + recipient);
 
         // TODO: persist approval action or update model here
-        if (navigationController != null) {
-            navigationController.swapView("/utd/tcep/formapprovalview");
-        }
+        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formapprovalview.fxml"));
+
+        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
+        loader.setController(this);
+        Node overlayRoot = loader.load();
+
         closeOverlay();
     }
 
@@ -276,9 +273,12 @@ public class FormDetailedController {
         System.out.println("Denial confirmed. Reason: " + reason + ", Recipient: " + recipient);
 
         // TODO: persist denial action or update model here
-        if (navigationController != null) {
-            navigationController.swapView("/utd/tcep/formdenialview");
-        }
+        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdenialview.fxml"));
+
+        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
+        loader.setController(this);
+        Node overlayRoot = loader.load();
+
         closeOverlay();
     }
 
@@ -294,10 +294,11 @@ public class FormDetailedController {
         System.out.println("Send back confirmed. Reason: " + reason + ", Recipient: " + recipient);
 
         // TODO: perform any DB updates or messaging here using reason/recipient
+        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formsendbackview.fxml"));
 
-        if (navigationController != null) {
-            navigationController.swapView("/utd/tcep/formsendbackview");
-        }
+        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
+        loader.setController(this);
+        Node overlayRoot = loader.load();
         closeOverlay();
     }
 
