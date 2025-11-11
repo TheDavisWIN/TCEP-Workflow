@@ -135,6 +135,20 @@ public class FormDetailedController {
             if (!reasons.isEmpty()) sendBackReasonCombo.getSelectionModel().selectFirst();
         }
 
+        // show/hide "Other" textfield for send back reason
+        if (sendBacklReasonCombo != null && sendBackReasonOtherField != null) {
+            sendBackReasonCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                boolean show = "Other".equals(newVal);
+                sendBackReasonOtherField.setVisible(show);
+                sendBackReasonOtherField.setManaged(show);
+                if (show) sendBackReasonOtherField.requestFocus();
+            });
+            String sel = sendBackReasonCombo.getValue();
+            boolean show = "Other".equals(sel);
+            sendBackReasonOtherField.setVisible(show);
+            sendBackReasonOtherField.setManaged(show);
+        }
+
         if (sendBackRecipientCombo != null) {
             ObservableList<String> recipients = FXCollections.observableArrayList(
                 "Dr. Crynes",
