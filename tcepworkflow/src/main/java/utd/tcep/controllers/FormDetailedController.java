@@ -136,7 +136,7 @@ public class FormDetailedController {
         }
 
         // show/hide "Other" textfield for send back reason
-        if (sendBacklReasonCombo != null && sendBackReasonOtherField != null) {
+        if (sendBackReasonCombo != null && sendBackReasonOtherField != null) {
             sendBackReasonCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
                 boolean show = "Other".equals(newVal);
                 sendBackReasonOtherField.setVisible(show);
