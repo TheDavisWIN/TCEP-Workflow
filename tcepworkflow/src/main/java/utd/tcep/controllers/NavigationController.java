@@ -16,6 +16,8 @@ import javafx.scene.layout.VBox;
 import utd.tcep.data.TCEPForm;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
+import utd.tcep.db.TCEPDatabaseService;
+
 
 public class NavigationController {
 
@@ -85,11 +87,13 @@ public class NavigationController {
 
     // Ryan Pham (rkp200003)
     // Davis Huynh (dxh170005) (added logout functionality)
+    // Ayden Benel (acb210001) (added database closing)
     @FXML
     private void handleLogout() throws IOException {
         swapView(View.Login);
         navigationBar.setVisible(false);
         System.out.println("Logout");
+        TCEPDatabaseService.closeConnection();
         loginController.resetFields();
     }
 
