@@ -118,8 +118,7 @@ CREATE TABLE TCEP_Form (
     FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
     FOREIGN KEY (Incoming_CourseID) REFERENCES Incoming_Course(Incoming_CourseID),
     FOREIGN KEY (Equivalent_CourseID) REFERENCES Equivalent_Course(Equivalent_CourseID),
-    FOREIGN KEY (InstitutionID) REFERENCES Institution(InstitutionID),
-    FOREIGN KEY (StatusID) REFERENCES Transfer_Status(StatusID)
+    FOREIGN KEY (InstitutionID) REFERENCES Institution(InstitutionID)
 ) ENGINE=InnoDB;
 
 -- Transfers Table

@@ -5,37 +5,55 @@
 
 package utd.tcep.controllers;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.time.LocalDate;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
+import utd.tcep.data.TCEPForm;
+import utd.tcep.data.TCEPFormTable;
+import utd.tcep.events.NavigationRequestEvent;
 
 public class FormTableController {
 
-    // Switch to detailed form view with filled fields
-    @FXML
-    private void openForm() throws IOException {
-        
+    // from FXML
+    @FXML public TableView<TCEPForm> formTable;
+    @FXML private TableColumn<TCEPForm, String> studentNameCol;
+    @FXML private TableColumn<TCEPForm, String> utdIdCol;
+    @FXML private TableColumn<TCEPForm, String> netIdCol;
+    @FXML private TableColumn<TCEPForm, LocalDate> dateStartedCol;
+    @FXML private TableColumn<TCEPForm, String> statusCol;
+    @FXML private Label dbStatus;   // "DB: not tested yet"
+    @FXML private TextField searchField;
+
+    private ObservableList<TCEPForm> masterData = FXCollections.observableArrayList();
+    private FilteredList<TCEPForm> filteredData;
+    private TCEPFormTable formTableObject = new TCEPFormTable();
+
+    // Written by Ryan Pham (rkp200003)
+    public TCEPFormTable getFormTableObject() {
+        return formTableObject;
     }
 
-    @FXML
-    private Label dbStatus; // Shows "DB: connected (...)" or error message. **FOR TESTING - REMOVE LATER**
-
-    /** ***FOR TESTING - REMOVE LATER***
-     *  Handler for the "Test DB Connection" button in main.fxml.     * 
-     *
-     *  - Opens a connection using TCEPDatabaseService (so we use the same settings everywhere).
-     *  - Runs a SELECT COUNT(*) on TCEP_Form: shows we can reach our actual app table.
-     *  - Runs SHOW TABLES: shows the schema exists even if the form table is still empty.
-     *  - Displays the result in the UI label so teammates/sponsor can see it without looking at console.
-     *
-     *  - This is a quick integration check between the JavaFX front end and the XAMPP/MySQL backend.
-     *  - Our TCEP_Form table might be empty during early development, so we also count tables to show “real” output.
-     * 
-     *  Jeffrey Chou
+    /**
+     * Initializes the Form Table View after the FXML is loaded.
+     * <p>
+     * This method is automatically called by the JavaFX runtime once the
+     * corresponding FXML file (formtableview.fxml) is loaded.
+     * It binds each TableColumn to the corresponding property in the TCEPForm model
+     * using PropertyValueFactory, ensuring data from the database appears in the correct column.
+     * It also performs an initial call to loadForms() to populate the table when the scene is first displayed.
+     * written by Jeffrey Chou (jxc033200) and Ryan Pham (rkp200003)
      */
     @FXML
     public void initialize() {
@@ -92,10 +110,25 @@ public class FormTableController {
         try {
             formTableObject.loadForms();
         } catch (Exception e) {
-            dbStatus.setText("DB: ❌ not connected");
             e.printStackTrace();
         }
     }
-    
+
+    // Handles search field input to filter the table
+    // Written by Davis Huynh (dxh170005)
+    @FXML
+    private void onSearchChanged() {
+        String search = searchField.getText().toLowerCase();
+
+        if (filteredData != null) {
+            filteredData.setPredicate(f -> {
+                if (search == null || search.isEmpty()) return true;
+                return f.getStudentName().toLowerCase().contains(search)
+                        || f.getUtdId().toLowerCase().contains(search)
+                        || f.getNetId().toLowerCase().contains(search);
+            });
+        }
+    }
+
 }
  

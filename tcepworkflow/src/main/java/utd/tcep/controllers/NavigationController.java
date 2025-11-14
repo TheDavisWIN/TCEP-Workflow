@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * Handles navigation bar
- * Ryan Pham
+ * Ryan Pham (rkp200003)
 ***********************************************************************************************************************/
 
 package utd.tcep.controllers;
@@ -10,11 +10,22 @@ import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import utd.tcep.data.TCEPForm;
+import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
+import utd.tcep.db.TCEPDatabaseService;
+
 
 public class NavigationController {
+
+    public enum View {
+        Detailed,
+        Table,
+        Login
+    }
 
     @FXML
     private GridPane appGridPane;
@@ -59,14 +70,14 @@ public class NavigationController {
     }
 
     // Show the full form table
-    // Ryan Pham
+    // Ryan Pham (rkp200003)
     @FXML
     private void handleShowFormTable() throws IOException {
-        swapView("/utd/tcep/formtableview");
+        swapView(View.Table);
     }
 
     // Create a new form with blank fields
-    // Ryan Pham
+    // Ryan Pham (rkp200003)
     @FXML
     private void handleShowBlankForm() throws IOException {
         swapView(View.Detailed);
@@ -75,10 +86,31 @@ public class NavigationController {
         System.out.println(formTableController.getFormTableObject().rows.size());
     }
 
-    // Ryan Pham
+    // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added logout functionality)
+    // Ayden Benel (acb210001) (added database closing)
     @FXML
     private void handleLogout() throws IOException {
+        swapView(View.Login);
+        navigationBar.setVisible(false);
         System.out.println("Logout");
+        TCEPDatabaseService.closeConnection();
+        loginController.resetFields();
+    }
+
+    // Called when login is successful
+    // Davis Huynh (dxh170005)
+    public void onLoginSuccess() {
+        navigationBar.setVisible(true);
+        swapView(View.Table);
+    }
+
+    // Show or hide the navigation bar
+    // Davis Huynh (dxh170005)
+    public void showNavigationBar(boolean show) {
+        if (navigationBar != null) {
+            navigationBar.setVisible(show);
+        }
     }
 
     // Swap between different views and load FXML when navigation buttons are clicked

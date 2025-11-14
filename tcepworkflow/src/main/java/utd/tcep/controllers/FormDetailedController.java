@@ -1,12 +1,28 @@
 /***********************************************************************************************************************
  * JavaFX Controller for detailed interaction with fields in a TCEP form
+ * Written by Ryan Pham (rkp200003)
 ***********************************************************************************************************************/
 
 package utd.tcep.controllers;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import utd.tcep.data.TCEPForm;
+import utd.tcep.main.TCEPWorkflowApp;
+import utd.tcep.db.TCEPDatabaseService;
 
 public class FormDetailedController {
 
@@ -96,14 +112,144 @@ public class FormDetailedController {
         
     }
 
+    // Load an overlay FXML into the overlay container and make it visible.
+    // Written by Nicolas Hartono (nxh210004)
+    public void loadOverlay(String fxmlPath) throws IOException {
+        // Clear any existing overlay
+        overlayContainer.getChildren().clear();
+
+        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource(fxmlPath + ".fxml"));
+        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
+        loader.setController(this);
+        Node overlayRoot = loader.load();
+
+        overlayContainer.getChildren().add(overlayRoot);
+        overlayContainer.setVisible(true);
+
+        // populate send-back combo boxes if they exist in the loaded FXML
+        if (sendBackReasonCombo != null) {
+            ObservableList<String> reasons = FXCollections.observableArrayList(
+                "Incomplete information",
+                "Missing transcript",
+                "Course mismatch",
+                "Other"
+            );
+            sendBackReasonCombo.setItems(reasons);
+            if (!reasons.isEmpty()) sendBackReasonCombo.getSelectionModel().selectFirst();
+        }
+
+        // show/hide "Other" textfield for send back reason
+        if (sendBackReasonCombo != null && sendBackReasonOtherField != null) {
+            sendBackReasonCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                boolean show = "Other".equals(newVal);
+                sendBackReasonOtherField.setVisible(show);
+                sendBackReasonOtherField.setManaged(show);
+                if (show) sendBackReasonOtherField.requestFocus();
+            });
+            String sel = sendBackReasonCombo.getValue();
+            boolean show = "Other".equals(sel);
+            sendBackReasonOtherField.setVisible(show);
+            sendBackReasonOtherField.setManaged(show);
+        }
+
+        if (sendBackRecipientCombo != null) {
+            ObservableList<String> recipients = FXCollections.observableArrayList(
+                "Dr. Crynes",
+                "Academic Advisor",
+                "Department Coordinator",
+                "Registrar"
+            );
+            sendBackRecipientCombo.setItems(recipients);
+            if (!recipients.isEmpty()) sendBackRecipientCombo.getSelectionModel().selectFirst();
+        }
+
+        // populate approval combos if present
+        if (approvalReasonCombo != null) {
+            ObservableList<String> reasons = FXCollections.observableArrayList(
+                "Syllabus confirmed",
+                "Grade validated",
+                "Other"
+            );
+            approvalReasonCombo.setItems(reasons);
+            if (!reasons.isEmpty()) approvalReasonCombo.getSelectionModel().selectFirst();
+        }
+
+        // show/hide "Other" textfield for approval reason
+        if (approvalReasonCombo != null && approvalReasonOtherField != null) {
+            approvalReasonCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                boolean show = "Other".equals(newVal);
+                approvalReasonOtherField.setVisible(show);
+                approvalReasonOtherField.setManaged(show);
+                if (show) approvalReasonOtherField.requestFocus();
+            });
+            String sel = approvalReasonCombo.getValue();
+            boolean show = "Other".equals(sel);
+            approvalReasonOtherField.setVisible(show);
+            approvalReasonOtherField.setManaged(show);
+        }
+
+        if (approvalRecipientCombo != null) {
+            ObservableList<String> recipients = FXCollections.observableArrayList(
+                "Student",
+                "Registrar",
+                "CS Department"
+            );
+            approvalRecipientCombo.setItems(recipients);
+            if (!recipients.isEmpty()) approvalRecipientCombo.getSelectionModel().selectFirst();
+        }
+
+        // populate denial combos if present
+        if (denialReasonCombo != null) {
+            ObservableList<String> reasons = FXCollections.observableArrayList(
+                "Insufficient grade",
+                "Non-equivalent course",
+                "Other"
+            );
+            denialReasonCombo.setItems(reasons);
+            if (!reasons.isEmpty()) denialReasonCombo.getSelectionModel().selectFirst();
+        }
+
+        // show/hide "Other" textfield for denial reason
+        if (denialReasonCombo != null && denialReasonOtherField != null) {
+            denialReasonCombo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                boolean show = "Other".equals(newVal);
+                denialReasonOtherField.setVisible(show);
+                denialReasonOtherField.setManaged(show);
+                if (show) denialReasonOtherField.requestFocus();
+            });
+            String sel = denialReasonCombo.getValue();
+            boolean show = "Other".equals(sel);
+            denialReasonOtherField.setVisible(show);
+            denialReasonOtherField.setManaged(show);
+        }
+
+        if (denialRecipientCombo != null) {
+            ObservableList<String> recipients = FXCollections.observableArrayList(
+                "Student",
+                "Department",
+                "Registrar"
+            );
+            denialRecipientCombo.setItems(recipients);
+            if (!recipients.isEmpty()) denialRecipientCombo.getSelectionModel().selectFirst();
+        }
+    }
+
+    // Close and remove any overlay
+    // Written by Nicolas Hartono (nxh210004)
+    public void closeOverlay() {
+        overlayContainer.getChildren().clear();
+        overlayContainer.setVisible(false);
+    }
+
     @FXML
     private void handleAccept() throws IOException {
-        
+        // load approval overlay instead of using alerts/popups
+        loadOverlay("/utd/tcep/formapprovalview");
     }
 
     @FXML
     private void handleDeny() throws IOException {
-        
+        loadOverlay("/utd/tcep/formdenialview");
     }
 
     @FXML
@@ -111,7 +257,7 @@ public class FormDetailedController {
         loadOverlay("/utd/tcep/formsendbackview");
     }
     
-    // Changes made to approval action
+    // Changes made to approval actio   n
     // Written by Nicolas Hartono (nxh210004)
     @FXML
     public void confirmApproval() throws IOException {
