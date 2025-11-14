@@ -24,7 +24,9 @@ public class NavigationController {
     public enum View {
         Detailed,
         Table,
-        Login
+        Login,
+        History
+        
     }
 
     @FXML
@@ -32,11 +34,14 @@ public class NavigationController {
     private Node formDetailedView;
     private Node formTableView;
     private Node loginView;
+    private Node formHistoryView;
+    
     @FXML
     private VBox navigationBar;
     private FormDetailedController formDetailedController;
     private FormTableController formTableController;
     private LoginController loginController;
+    private TCEPHistoryController historyController;
 
     // Automatically called on program start, saving controllers for future method calls
     // Ryan Pham (rkp200003)
@@ -60,6 +65,17 @@ public class NavigationController {
         loginController = loginViewLoader.getController();
         loginController.setNavigationController(this);
 
+        formDetailedController.setNavigationController(this);
+
+        FXMLLoader formHistoryViewLoader = new FXMLLoader(
+        TCEPWorkflowApp.class.getResource("/utd/tcep/formhistoryview.fxml")
+        );
+        formHistoryView = formHistoryViewLoader.load();
+        historyController = formHistoryViewLoader.getController();
+        historyController.setNavigationController(this);
+        appGridPane.getChildren().add(formHistoryView);
+        GridPane.setColumnIndex(formHistoryView, 1);
+
         swapView(View.Login);
 
         formTableController.formTable.addEventHandler(NavigationRequestEvent.REQUEST, event -> {
@@ -67,6 +83,7 @@ public class NavigationController {
             formDetailedController.setForm(event.getForm());
             System.out.println("worked");
         });
+
     }
 
     // Show the full form table
@@ -119,6 +136,7 @@ public class NavigationController {
         loginView.setVisible(false);
         formDetailedView.setVisible(false);
         formTableView.setVisible(false);
+        formHistoryView.setVisible(false);
 
         switch (view) {
             case Login:
@@ -130,6 +148,9 @@ public class NavigationController {
             case Table:
                 formTableView.setVisible(true);
                 break;
+            case History:
+            formHistoryView.setVisible(true);
+            break;
         }
     }
 

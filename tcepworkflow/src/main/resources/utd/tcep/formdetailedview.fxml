@@ -1,3 +1,11 @@
+
+<!--        
+FXML file for TCEP EMPTY FORM 
+Andrew Robertson (AMR220023)
+
+-->
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
@@ -8,6 +16,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 
 <StackPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormDetailedController">
    <children>
@@ -15,15 +25,21 @@
          <children>
             <HBox alignment="CENTER_LEFT" spacing="20">
                <children>
-                  <Button style="-fx-text-fill: black;" text="View History" />
+                  <Button fx:id="viewHistoryButton" style="-fx-text-fill: black;" text="View History" onAction="#handleViewHistory"/>
                </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="30">
                <children>
+                     <!-- UTD Logo -->
+             <ImageView fx:id="utdLogo" fitHeight="50" preserveRatio="true">
+                <image>
+                    <Image url="@images/utd_logo.png" />
+                </image>
+            </ImageView>
                   <VBox spacing="10">
                      <children>
-                        <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="ECS TCEP FORM" />
-                     </children>
+                         <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="ECS TCEP FORM" />
+                        </children>
                   </VBox>
                   <Region visible="false" HBox.hgrow="ALWAYS" />
                   <VBox alignment="TOP_RIGHT" spacing="5">
@@ -112,13 +128,14 @@
                         <VBox>
                            <children>
                               <TextField fx:id="equivalentCourseField" prefWidth="150" />
-                              <Label text="Equivalent Course" />
+                              <Label text="Course number" />
                            </children>
                         </VBox>
                         <VBox>
                            <children>
                               <TextField fx:id="satisfiedRequirementField" prefWidth="150" />
-                              <Label text="Satisfied Requirement" />
+                              <Label text="Course title" />
+
                            </children>
                         </VBox>
                         <VBox>

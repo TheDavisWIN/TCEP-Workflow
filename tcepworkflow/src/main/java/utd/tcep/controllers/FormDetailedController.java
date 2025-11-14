@@ -24,6 +24,8 @@ import utd.tcep.data.TCEPForm;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
 
+
+
 public class FormDetailedController {
 
     private TCEPForm currentForm;
@@ -61,6 +63,9 @@ public class FormDetailedController {
     @FXML private Button confirmApprovalButton;
     @FXML private Button confirmDenialButton;
     @FXML private Button confirmSendBackButton;
+    @FXML private Button viewHistoryButton;
+
+    private Node viewHistoryRoot;
 
     // Setup property listeners for fields in the form
     // Written by Ryan Pham (rkp200003)
@@ -104,9 +109,39 @@ public class FormDetailedController {
         });
     }
     // Show form's change history
+
+    private NavigationController navigationController;
+
+    public void setNavigationController(NavigationController nav) {
+    this.navigationController = nav;
+
+        // Wire buttons now that nav exists
+        if (viewHistoryButton != null) {
+            viewHistoryButton.setOnAction(e -> navigationController.swapView(NavigationController.View.History));
+        }
+        if (acceptButton != null) {
+            acceptButton.setOnAction(e -> {
+                try { handleAccept(); } catch (IOException ex) { ex.printStackTrace(); }
+            });
+        }
+        if (denyButton != null) {
+            denyButton.setOnAction(e -> {
+                try { handleDeny(); } catch (IOException ex) { ex.printStackTrace(); }
+            });
+        }
+        if (sendBackButton != null) {
+            sendBackButton.setOnAction(e -> {
+                try { handleSendBack(); } catch (IOException ex) { ex.printStackTrace(); }
+            });
+        }
+    }
     @FXML
-    private void handleViewHistory() throws IOException {
-        
+    private void handleViewHistory() {
+        navigationController.swapView(NavigationController.View.History);
+}
+
+     public VBox getFormViewContainer() {
+        return formViewContainer;
     }
 
     // Load an overlay FXML into the overlay container and make it visible.
