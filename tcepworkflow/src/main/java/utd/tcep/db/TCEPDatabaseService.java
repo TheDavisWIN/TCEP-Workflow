@@ -72,7 +72,7 @@ public class TCEPDatabaseService {
     }
 
     // Written by Jeffrey Chou (jxc033200) and Ryan Pham (rkp200003)
-    public static ObservableList<TCEPForm> getAllTCEPForms() {
+    public static ObservableList<TCEPForm> getFormsFromDB() {
         ObservableList<TCEPForm> forms = FXCollections.observableArrayList();
         // this query ONLY uses columns we know exist right now
         String sql =
