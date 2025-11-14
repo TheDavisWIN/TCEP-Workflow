@@ -32,6 +32,7 @@ public class FormTableController {
     @FXML private TableColumn<TCEPForm, String> utdIdCol;
     @FXML private TableColumn<TCEPForm, String> netIdCol;
     @FXML private TableColumn<TCEPForm, LocalDate> dateStartedCol;
+    @FXML private TableColumn<TCEPForm, String> schoolNameColumn;
     @FXML private TableColumn<TCEPForm, String> statusCol;
     @FXML private Label dbStatus;   // "DB: not tested yet"
     @FXML private TextField searchField;
@@ -62,6 +63,7 @@ public class FormTableController {
         utdIdCol.setCellValueFactory(new PropertyValueFactory<>("utdId"));
         netIdCol.setCellValueFactory(new PropertyValueFactory<>("netId"));
         dateStartedCol.setCellValueFactory(new PropertyValueFactory<>("startedDate"));
+        schoolNameColumn.setCellValueFactory(new PropertyValueFactory<>("schoolName"));
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
         
         // 2. bind form table to controller
@@ -124,9 +126,10 @@ public class FormTableController {
         if (filteredData != null) {
             filteredData.setPredicate(f -> {
                 if (search == null || search.isEmpty()) return true;
-                return f.getStudentName().toLowerCase().contains(search)
-                        || f.getUtdId().toLowerCase().contains(search)
-                        || f.getNetId().toLowerCase().contains(search);
+                return (f.getStudentName() != null && f.getStudentName().toLowerCase().contains(search))
+                        || (f.getUtdId() != null && f.getUtdId().toLowerCase().contains(search))
+                        || (f.getNetId() != null && f.getNetId().toLowerCase().contains(search))
+                        || (f.getSchoolName() != null && f.getSchoolName().toLowerCase().contains(search));
             });
         }
     }
