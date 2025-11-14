@@ -133,15 +133,14 @@
             </VBox>
             <HBox alignment="CENTER" spacing="20" style="-fx-padding: 30 0 0 0;">
                <children>
-                  <Button fx:id="acceptButton" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Accept" onAction="#handleAccept" HBox.hgrow="ALWAYS" />
-                  <Button fx:id="denyButton" maxWidth="Infinity" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-weight: bold;" text="Deny" onAction="#handleDeny" HBox.hgrow="ALWAYS" />
-                  <Button fx:id="sendBackButton" maxWidth="Infinity" style="-fx-background-color: #9E9E9E; -fx-text-fill: white; -fx-font-weight: bold;" text="Send Back" onAction="#handleSendBack" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="acceptButton" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Accept" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="denyButton" maxWidth="Infinity" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-weight: bold;" text="Deny" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="sendBackButton" maxWidth="Infinity" style="-fx-background-color: #9E9E9E; -fx-text-fill: white; -fx-font-weight: bold;" text="Send Back" HBox.hgrow="ALWAYS" />
                   <Button fx:id="generatePdfButton" maxWidth="Infinity" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="Generate PDF" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
          </children>
       </VBox>
-      <AnchorPane fx:id="overlayContainer" visible="false" pickOnBounds="true" style="-fx-background-color: rgba(0, 0, 0, 0.5);" StackPane.alignment="CENTER" />
+      <AnchorPane fx:id="overlayContainer" visible="false" style="-fx-background-color: rgba(0, 0, 0, 0.5);" StackPane.alignment="CENTER" />
    </children>
 </StackPane>
-

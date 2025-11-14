@@ -2,7 +2,10 @@ module utdtcep {
     requires javafx.controls;
     requires javafx.fxml;
     requires transitive javafx.graphics;
+    requires javafx.swing;
     requires java.sql;
+    requires org.apache.pdfbox;
+    requires java.desktop;
 
     opens utd.tcep.main to javafx.fxml;
     opens utd.tcep.controllers to javafx.fxml;

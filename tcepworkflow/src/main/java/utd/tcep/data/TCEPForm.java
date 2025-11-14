@@ -15,6 +15,7 @@ public class TCEPForm {
         Other
     }
 
+    public int formId;
     public LocalDate requestDate;
     public Term term;
     public int year;
@@ -29,6 +30,7 @@ public class TCEPForm {
     private String utdId;         
     private String netId;       
     private LocalDate startedDate;
+    private String schoolName;
     private String status;
 
     /**
@@ -36,6 +38,7 @@ public class TCEPForm {
      * Written by Jeffrey Chou (jxc033200)
      */
     // --- getters (required by TableView) ---
+    public int getFormId()              { return formId; }
     public String getStudentName()      { return studentName; }
     public String getUtdId()            { return utdId; }
     public String getNetId()            { return netId; }
@@ -45,9 +48,11 @@ public class TCEPForm {
     public int getEquivalentID()        { return equivalentCourseID; }
     public int getInstitutionID()       { return institutionID; }
     public LocalDate getStartedDate()   { return startedDate; }
+    public String getSchoolName()       { return schoolName; }
     public String getStatus()           { return status; }
 
     // --- setters (used by controller when mapping ResultSet) ---
+    public void setFormId(int formId)                      { this.formId = formId; }
     public void setStudentName(String studentName)         { this.studentName = studentName; }
     public void setUtdId(String utdId)                     { this.utdId = utdId; }
     public void setNetId(String netId)                     { this.netId = netId; }
@@ -57,6 +62,7 @@ public class TCEPForm {
     public void setEquivalentID(int equivalentCourseID)    { this.equivalentCourseID = equivalentCourseID; }
     public void setInstitutionID(int institutionID)        { this.institutionID = institutionID; }
     public void setStartedDate(LocalDate startedDate)      { this.startedDate = startedDate; }
+    public void setSchoolName(String schoolName)           { this.schoolName = schoolName; }
     public void setStatus(String status)                   { this.status = status; }
 
 }
