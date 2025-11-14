@@ -57,11 +57,14 @@ public class LoginController {
     // Written by Davis Huynh (dxh170005)
     private boolean userExists(String username) {
         String sql = "SELECT * FROM advisor WHERE Advisor_Email = ?";
-        try (Connection conn = TCEPDatabaseService.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, username);
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
+        try {
+            Connection conn = TCEPDatabaseService.getConnection();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, username);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;

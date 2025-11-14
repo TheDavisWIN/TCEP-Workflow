@@ -33,6 +33,7 @@ public class TCEPForm {
     private SimpleStringProperty utdId;         
     private SimpleStringProperty netId;       
     private SimpleObjectProperty<LocalDate> startedDate;
+    private SimpleStringProperty schoolName;
     private SimpleStringProperty status;
 
     // Constructor
@@ -44,6 +45,7 @@ public class TCEPForm {
         this.utdId = new SimpleStringProperty();
         this.netId = new SimpleStringProperty();
         this.startedDate = new SimpleObjectProperty<LocalDate>();
+        this.schoolName = new SimpleStringProperty();
         this.status = new SimpleStringProperty();
     }
 
@@ -58,6 +60,7 @@ public class TCEPForm {
     public String getUtdId()            { return utdId.get(); }
     public String getNetId()            { return netId.get(); }
     public LocalDate getStartedDate()   { return startedDate.get(); }
+    public String getSchoolName()       { return schoolName.get(); }
     public String getStatus()           { return status.get(); }
     public String getDegReq()           { return degreeRequirement; }
     public String getCoreDes()          { return coreDesignation; }
@@ -70,6 +73,7 @@ public class TCEPForm {
     public SimpleStringProperty getUtdIdProperty()            { return utdId; }
     public SimpleStringProperty getNetIdProperty()            { return netId; }
     public SimpleObjectProperty<LocalDate> getStartedDateProperty()   { return startedDate; }
+    public SimpleStringProperty getSchoolNameProperty()       { return schoolName; }
     public SimpleStringProperty getStatusProperty()           { return status; }
 
     // --- setters (used by controller when mapping ResultSet) ---
@@ -77,6 +81,7 @@ public class TCEPForm {
     public void setUtdId(String utdId)                     { this.utdId.set(utdId); }
     public void setNetId(String netId)                     { this.netId.set(netId); }
     public void setStartedDate(LocalDate startedDate)      { this.startedDate.set(startedDate); }
+    public void setSchoolName(String schoolName)           { this.schoolName.set(schoolName); }
     public void setStatus(String status)                   { this.status.set(status); }
 
     public void setDegReq(String degreeRequirement)        { this.degreeRequirement = degreeRequirement; }
@@ -84,6 +89,5 @@ public class TCEPForm {
     public void setIncomingID(int incomingCourseID)        { this.incomingCourseID = incomingCourseID; }
     public void setEquivalentID(int equivalentCourseID)    { this.equivalentCourseID = equivalentCourseID; }
     public void setInstitutionID(int institutionID)        { this.institutionID = institutionID; }
-    
 
 }

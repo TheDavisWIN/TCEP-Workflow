@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -18,7 +17,6 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import utd.tcep.data.TCEPForm;
 import utd.tcep.data.TCEPFormTable;
@@ -32,6 +30,7 @@ public class FormTableController {
     @FXML private TableColumn<TCEPForm, String> utdIdCol;
     @FXML private TableColumn<TCEPForm, String> netIdCol;
     @FXML private TableColumn<TCEPForm, LocalDate> dateStartedCol;
+    @FXML private TableColumn<TCEPForm, String> schoolNameColumn;
     @FXML private TableColumn<TCEPForm, String> statusCol;
     @FXML private Label dbStatus;   // "DB: not tested yet"
     @FXML private TextField searchField;
@@ -62,6 +61,7 @@ public class FormTableController {
         utdIdCol.setCellValueFactory(cellData -> cellData.getValue().getUtdIdProperty());
         netIdCol.setCellValueFactory(cellData -> cellData.getValue().getNetIdProperty());
         dateStartedCol.setCellValueFactory(cellData -> cellData.getValue().getStartedDateProperty());
+        schoolNameColumn.setCellValueFactory(cellData -> cellData.getValue().getSchoolNameProperty());
         statusCol.setCellValueFactory(cellData -> cellData.getValue().getStatusProperty());
         
         // 2. bind form table to TCEPForm table
@@ -123,9 +123,10 @@ public class FormTableController {
         if (filteredData != null) {
             filteredData.setPredicate(f -> {
                 if (search == null || search.isEmpty()) return true;
-                return f.getStudentName().toLowerCase().contains(search)
-                        || f.getUtdId().toLowerCase().contains(search)
-                        || f.getNetId().toLowerCase().contains(search);
+                return (f.getStudentName() != null && f.getStudentName().toLowerCase().contains(search))
+                        || (f.getUtdId() != null && f.getUtdId().toLowerCase().contains(search))
+                        || (f.getNetId() != null && f.getNetId().toLowerCase().contains(search))
+                        || (f.getSchoolName() != null && f.getSchoolName().toLowerCase().contains(search));
             });
         }
     }

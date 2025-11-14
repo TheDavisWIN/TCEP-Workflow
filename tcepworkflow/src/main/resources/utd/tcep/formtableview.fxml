@@ -19,6 +19,7 @@
             <TableColumn fx:id="studentNameCol" prefWidth="208.0" text="Student Name" />
             <TableColumn fx:id="utdIdCol" minWidth="0.0" prefWidth="251.0" text="UTD ID" />
             <TableColumn fx:id="netIdCol" minWidth="0.0" prefWidth="320.0" text="Net ID" />
+            <TableColumn fx:id="schoolNameColumn" text="Institution" />
             <TableColumn fx:id="dateStartedCol" minWidth="0.0" prefWidth="192.0" text="Date Started" />
             <TableColumn fx:id="statusCol" maxWidth="574.0" minWidth="0.0" prefWidth="194.0" text="Status" />
          </columns>
