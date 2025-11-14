@@ -18,7 +18,45 @@ public class NavigationController {
 
     @FXML
     private GridPane appGridPane;
-    private Node currentView;
+    private Node formDetailedView;
+    private Node formTableView;
+    private Node loginView;
+    @FXML
+    private VBox navigationBar;
+    private FormDetailedController formDetailedController;
+    private FormTableController formTableController;
+    private LoginController loginController;
+
+    // Automatically called on program start, saving controllers for future method calls
+    // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added Login view)
+    @FXML
+    public void initialize() throws IOException {
+        FXMLLoader formDetailedViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdetailedview.fxml"));
+        FXMLLoader formTableViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formtableview.fxml"));
+        FXMLLoader loginViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/loginview.fxml"));
+        formDetailedView = formDetailedViewLoader.load();
+        formTableView = formTableViewLoader.load();
+        loginView = loginViewLoader.load();
+        appGridPane.getChildren().add(loginView);
+        appGridPane.getChildren().add(formDetailedView);
+        appGridPane.getChildren().add(formTableView);
+        GridPane.setColumnIndex(loginView, 1);
+        GridPane.setColumnIndex(formDetailedView, 1);
+        GridPane.setColumnIndex(formTableView, 1);
+        formDetailedController = formDetailedViewLoader.getController();
+        formTableController = formTableViewLoader.getController();
+        loginController = loginViewLoader.getController();
+        loginController.setNavigationController(this);
+
+        swapView(View.Login);
+
+        // Handle when user left clicks on a row in the form table in order to open the form
+        formTableController.formTable.addEventHandler(NavigationRequestEvent.REQUEST, event -> {
+            swapView(View.Detailed);
+            formDetailedController.setForm(event.getForm());
+        });
+    }
 
     // Show the full form table
     // Ryan Pham
@@ -31,9 +69,10 @@ public class NavigationController {
     // Ryan Pham
     @FXML
     private void handleShowBlankForm() throws IOException {
-        swapView("/utd/tcep/formdetailedview");
-
-        FormDetailedController.currentForm = new TCEPForm();
+        swapView(View.Detailed);
+        formDetailedController.setForm(formTableController.getFormTableObject().createBlankForm());
+        formTableController.formTable.refresh();
+        System.out.println(formTableController.getFormTableObject().rows.size());
     }
 
     // Ryan Pham
@@ -43,17 +82,24 @@ public class NavigationController {
     }
 
     // Swap between different views and load FXML when navigation buttons are clicked
-    // Ryan Pham
-    private void swapView(String fxml) throws IOException {
-        if (currentView != null)
-        {
-            appGridPane.getChildren().remove(currentView);
-        }
+    // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added Login view)
+    public void swapView(View view) {
+        loginView.setVisible(false);
+        formDetailedView.setVisible(false);
+        formTableView.setVisible(false);
 
-        FXMLLoader fxmlLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource(fxml + ".fxml"));
-        currentView = fxmlLoader.load();
-        appGridPane.getChildren().add(currentView);
-        GridPane.setColumnIndex(currentView, 1);
+        switch (view) {
+            case Login:
+                loginView.setVisible(true);
+                break;
+            case Detailed:
+                formDetailedView.setVisible(true);
+                break;
+            case Table:
+                formTableView.setVisible(true);
+                break;
+        }
     }
 }
  

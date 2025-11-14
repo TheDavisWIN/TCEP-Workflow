@@ -38,31 +38,59 @@ public class FormTableController {
      *  Jeffrey Chou
      */
     @FXML
-    private void onTestDbClicked() {
-        String formCountSql = "SELECT COUNT(*) AS cnt FROM TCEP_Form";
-        String tableCountSql = "SHOW TABLES";
+    public void initialize() {
+        // 1. bind columns to TCEPForm getters
+        studentNameCol.setCellValueFactory(cellData -> cellData.getValue().getStudentNameProperty());
+        utdIdCol.setCellValueFactory(cellData -> cellData.getValue().getUtdIdProperty());
+        netIdCol.setCellValueFactory(cellData -> cellData.getValue().getNetIdProperty());
+        dateStartedCol.setCellValueFactory(cellData -> cellData.getValue().getStartedDateProperty());
+        statusCol.setCellValueFactory(cellData -> cellData.getValue().getStatusProperty());
+        
+        // 2. bind form table to TCEPForm table
+        formTable.setRowFactory(table -> {
+            TableRow<TCEPForm> row = new TableRow<>();
 
-        try (Connection conn = utd.tcep.db.TCEPDatabaseService.getConnection();
-            PreparedStatement formPs = conn.prepareStatement(formCountSql);
-            PreparedStatement tablePs = conn.prepareStatement(tableCountSql)) {
-
-            // Get form count
-            int formCount = 0;
-            try (ResultSet rs = formPs.executeQuery()) {
-                if (rs.next()) formCount = rs.getInt("cnt");
+            if (row.getItem() != null)
+            {
+                row.setCursor(Cursor.HAND);
             }
 
-            // Get total number of tables
-            int tableCount = 0;
-            try (ResultSet rs = tablePs.executeQuery()) {
-                while (rs.next()) tableCount++;
+            row.setOnMouseClicked(event -> {
+                if (event.getButton() == MouseButton.PRIMARY && row.getItem() != null)
+                {
+                    formTable.fireEvent(new NavigationRequestEvent(row.getItem()));
+                }
+            });
+
+            return row;
+        });
+
+        filteredData = new FilteredList<>(masterData, p -> true); 
+        formTable.setItems(filteredData);
+
+        // 3. load data from DB
+        try {
+            formTableObject.loadForms();
+            masterData.clear();
+            masterData.addAll(formTableObject.rows);
+
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ❌ " + e.getMessage());
+            }
+        }
+    }
 
-            // Display both results
-            String message = String.format("DB: ✅ connected (%d forms, %d tables)", formCount, tableCount);
-            dbStatus.setText(message);
-            System.out.println("✅ Database connected! " + message);
-
+    // Handles refresh button. Calls loadForms to re-query the DB.
+    // Written by Jeffrey Chou (jxc033200)
+    @FXML
+    private void onRefreshClicked() {
+        try {
+            formTableObject.loadForms();
         } catch (Exception e) {
             dbStatus.setText("DB: ❌ not connected");
             e.printStackTrace();
