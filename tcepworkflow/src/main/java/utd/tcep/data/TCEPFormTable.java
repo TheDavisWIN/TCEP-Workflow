@@ -5,6 +5,7 @@
 package utd.tcep.data;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,6 +54,7 @@ public class TCEPFormTable {
 
     public TCEPForm createBlankForm() {
         TCEPForm newForm = new TCEPForm(getNewFormID());
+        newForm.setStartedDate(LocalDate.now());
         rows.add(newForm);
         return newForm;
     }

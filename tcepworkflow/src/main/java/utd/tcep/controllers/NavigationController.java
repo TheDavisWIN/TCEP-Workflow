@@ -10,10 +10,8 @@ import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import utd.tcep.data.TCEPForm;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
@@ -74,6 +72,7 @@ public class NavigationController {
     @FXML
     private void handleShowFormTable() throws IOException {
         swapView(View.Table);
+        formTableController.refreshMasterData();
     }
 
     // Create a new form with blank fields
@@ -82,8 +81,6 @@ public class NavigationController {
     private void handleShowBlankForm() throws IOException {
         swapView(View.Detailed);
         formDetailedController.setForm(formTableController.getFormTableObject().createBlankForm());
-        formTableController.formTable.refresh();
-        System.out.println(formTableController.getFormTableObject().rows.size());
     }
 
     // Ryan Pham (rkp200003)

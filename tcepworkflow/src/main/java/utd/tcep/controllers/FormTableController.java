@@ -130,5 +130,9 @@ public class FormTableController {
         }
     }
 
+    public void refreshMasterData() {
+        masterData.clear();
+        masterData.addAll(formTableObject.rows);
+    }
 }
  

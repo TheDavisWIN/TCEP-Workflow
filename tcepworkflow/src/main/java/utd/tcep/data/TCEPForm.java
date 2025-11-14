@@ -53,6 +53,7 @@ public class TCEPForm {
      * and Ryan Pham (rkp200003); changed to use JavaFX properties and added Property getters
      */
     // --- getters (required by TableView) ---
+    public int getId()                  { return formID; }
     public String getStudentName()      { return studentName.get(); }
     public String getUtdId()            { return utdId.get(); }
     public String getNetId()            { return netId.get(); }

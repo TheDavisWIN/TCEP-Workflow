@@ -16,6 +16,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.collections.FXCollections;
@@ -30,7 +31,9 @@ public class FormDetailedController {
     private String firstName;
     private String lastName;
     private String middleName;
+    private boolean loadingForm = false;
 
+    @FXML private Label startedDateLabel;
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
     @FXML private TextField miField;
@@ -67,16 +70,22 @@ public class FormDetailedController {
     @FXML
     public void initialize() {
         firstNameField.textProperty().addListener((observable, oldValue, newValue) -> {
-            firstName = newValue;
-            updateStudentName();
+            if (!loadingForm) {
+                firstName = newValue;
+                updateStudentName();
+            }
         });
         lastNameField.textProperty().addListener((observable, oldValue, newValue) -> {
-            lastName = newValue;
-            updateStudentName();
+            if (!loadingForm) {
+                lastName = newValue;
+                updateStudentName();
+            }
         });
         miField.textProperty().addListener((observable, oldValue, newValue) -> {
-            middleName = newValue;
-            updateStudentName();
+            if (!loadingForm) {
+                middleName = newValue;
+                updateStudentName();
+            }
         });
         studentIdField.textProperty().addListener((observable, oldValue, newValue) -> {
             currentForm.setUtdId((String)newValue);
@@ -85,25 +94,25 @@ public class FormDetailedController {
             // Add incoming course suggestions here
         });
         origCourseTitleField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
         origCreditHoursField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
         sourceInstitutionNameField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
         sourceInstitutionLocationField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
         equivalentCourseField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
         satisfiedRequirementField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
         coreDesignationField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
+            
         });
     }
     // Show form's change history
@@ -339,21 +348,45 @@ public class FormDetailedController {
     // Set currently managed form and fill all text fields in UI when set
     // Written by Ryan Pham (rkp200003)
     public void setForm(TCEPForm form) {
+        loadingForm = true; // set loadingForm to true to prevent listeners from firing while populating fields
         currentForm = form;
-        String studentID = form.getUtdId();
 
         clearForm();
 
-        System.out.println(form.getStudentName());
+        // Populate name fields by splitting full name
         if (form.getStudentName() != null)
         {
             String[] nameSplit = form.getStudentName().split(" ");
 
-            firstNameField.setText(nameSplit[0]);
-            lastNameField.setText(nameSplit[1]);
+            for (int i = 0; i < nameSplit.length; i++)
+            {
+                if (i == 0)
+                {
+                    firstNameField.setText(nameSplit[i]);
+                    firstName = nameSplit[i];
+                }
+                else if (i == nameSplit.length - 1)
+                {
+                    lastNameField.setText(nameSplit[i]);
+                    lastName = nameSplit[i];
+                }
+                else
+                {
+                    miField.setText(nameSplit[i]);
+                    middleName = nameSplit[i];
+                }
+            }
         }
+        
+        if (form.getStartedDate() != null) {
+            startedDateLabel.setText("Started on: " + form.getStartedDate().toString());
+        } else {
+            startedDateLabel.setText("ERROR: No start date");
+        }
+        
 
-        loadByID(studentID);
+        loadByFormID(form.getId());
+        loadingForm = false;
     }
 
     // Written by Ryan Pham (rkp200003)
@@ -363,7 +396,7 @@ public class FormDetailedController {
 
     // Load form data from database by student ID and populate fields
     // Written by Davis Huynh (dxh170005)
-    public void loadByID(String studentId) {
+    public void loadByFormID(int formId) {
         String sql = "SELECT f.StudentID, s.Student_Name, f.Degree_Requirement, f.Core_Designation, "
                 + "f.Incoming_CourseID, ic.CourseName AS IncomingCourseName, ic.CourseNumber AS IncomingCourseNumber,"
                 + "f.Equivalent_CourseID, ec.CourseName AS EquivalentCourseName, "
@@ -373,12 +406,12 @@ public class FormDetailedController {
                 + "LEFT JOIN incoming_course ic ON f.Incoming_CourseID = ic.Incoming_CourseID "
                 + "LEFT JOIN equivalent_course ec ON f.Equivalent_CourseID = ec.Equivalent_CourseID "
                 + "LEFT JOIN institution inst ON f.InstitutionID = inst.InstitutionID "
-                + "WHERE f.StudentID = ?";
+                + "WHERE f.FormID = ?";
 
         try (Connection conn = TCEPDatabaseService.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, studentId);
+            ps.setString(1, Integer.toString(formId));
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
