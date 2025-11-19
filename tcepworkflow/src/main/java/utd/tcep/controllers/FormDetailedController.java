@@ -108,7 +108,26 @@ public class FormDetailedController {
         coreDesignationField.textProperty().addListener((observable, oldValue, newValue) -> {
             System.out.println(newValue);
         });
+
     }
+
+    private void rewireMainButtons() {
+    if (acceptButton != null) {
+        acceptButton.setOnAction(e -> {
+            try { handleAccept(); } catch (IOException ex) { ex.printStackTrace(); }
+        });
+    }
+    if (denyButton != null) {
+        denyButton.setOnAction(e -> {
+            try { handleDeny(); } catch (IOException ex) { ex.printStackTrace(); }
+        });
+    }
+    if (sendBackButton != null) {
+        sendBackButton.setOnAction(e -> {
+            try { handleSendBack(); } catch (IOException ex) { ex.printStackTrace(); }
+        });
+    }
+}
     // Show form's change history
 
     private NavigationController navigationController;
@@ -116,14 +135,7 @@ public class FormDetailedController {
     public void setNavigationController(NavigationController nav) {
     this.navigationController = nav;
 
-        // Wire buttons now that nav exists
-        if (viewHistoryButton != null) {
-                viewHistoryButton.setOnAction(e -> {
-                navigationController.swapView(NavigationController.View.History);
-                navigationController.getHistoryController().loadHistoryForForm(currentFormId);
-            });
-}
-        if (acceptButton != null) {
+         if (acceptButton != null) {
             acceptButton.setOnAction(e -> {
                 try { handleAccept(); } catch (IOException ex) { ex.printStackTrace(); }
             });
@@ -138,6 +150,14 @@ public class FormDetailedController {
                 try { handleSendBack(); } catch (IOException ex) { ex.printStackTrace(); }
             });
         }
+
+        // Wire buttons now that nav exists
+        if (viewHistoryButton != null) {
+                viewHistoryButton.setOnAction(e -> {
+                navigationController.swapView(NavigationController.View.History);
+                navigationController.getHistoryController().loadHistoryForForm(currentFormId);
+            });
+}
     }
     @FXML
     private void handleViewHistory() {
@@ -158,6 +178,7 @@ public class FormDetailedController {
         // Use this controller for overlay callbacks (so overlay can call closeOverlay())
         loader.setController(this);
         Node overlayRoot = loader.load();
+        rewireMainButtons();
 
         overlayContainer.getChildren().add(overlayRoot);
         overlayContainer.setVisible(true);
@@ -268,6 +289,20 @@ public class FormDetailedController {
             denialRecipientCombo.setItems(recipients);
             if (!recipients.isEmpty()) denialRecipientCombo.getSelectionModel().selectFirst();
         }
+
+        // Wire the Confirm Approval button when the approval overlay is loaded
+        if (confirmApprovalButton != null) {
+            confirmApprovalButton.setOnAction(e -> {
+                try {
+                    confirmApproval();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+        }
+
+        rewireMainButtons();
+
     }
 
     // Close and remove any overlay

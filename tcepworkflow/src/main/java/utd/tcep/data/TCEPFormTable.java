@@ -42,7 +42,7 @@ public void loadForms() throws SQLException {
         while (rs.next()) {
             TCEPForm f = new TCEPForm(); 
             
-            // THIS IS THE KEY LINE YOU WERE MISSING
+           
             f.setFormId(rs.getInt("FormID"));                                     
             
             f.setStudentName(rs.getString("Student_Name"));    

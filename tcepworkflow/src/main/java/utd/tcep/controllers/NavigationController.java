@@ -136,6 +136,7 @@ public class NavigationController {
     // Swap between different views and load FXML when navigation buttons are clicked
     // Ryan Pham (rkp200003)
     // Davis Huynh (dxh170005) (added Login view)
+    // andrew robertson (AMR220023) (added view history)
     public void swapView(View view) {
         loginView.setVisible(false);
         formDetailedView.setVisible(false);
