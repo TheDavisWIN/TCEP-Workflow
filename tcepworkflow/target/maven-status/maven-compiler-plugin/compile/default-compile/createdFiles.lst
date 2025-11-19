@@ -9,6 +9,7 @@ utd/tcep/controllers/NavigationController$1.class
 utd/tcep/controllers/NavigationController$View.class
 utd/tcep/data/TCEPFormTable.class
 utd/tcep/controllers/FormTableController.class
+utd/tcep/data/FormHistoryEntry.class
 utd/tcep/main/TCEPWorkflowApp.class
 utd/tcep/controllers/NavigationController.class
 utd/tcep/events/NavigationRequestEvent.class

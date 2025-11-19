@@ -42,10 +42,12 @@ public class NavigationController {
     private FormTableController formTableController;
     private LoginController loginController;
     private TCEPHistoryController historyController;
+    private FormTableController tableController;
 
     // Automatically called on program start, saving controllers for future method calls
     // Ryan Pham (rkp200003)
     // Davis Huynh (dxh170005) (added Login view)
+    // Andrew Robertson(AMR22023) (added form history controller)
     @FXML
     public void initialize() throws IOException {
         FXMLLoader formDetailedViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdetailedview.fxml"));
@@ -64,8 +66,10 @@ public class NavigationController {
         formTableController = formTableViewLoader.getController();
         loginController = loginViewLoader.getController();
         loginController.setNavigationController(this);
-
+        
+        
         formDetailedController.setNavigationController(this);
+        tableController = formTableController;
 
         FXMLLoader formHistoryViewLoader = new FXMLLoader(
         TCEPWorkflowApp.class.getResource("/utd/tcep/formhistoryview.fxml")
@@ -152,6 +156,13 @@ public class NavigationController {
             formHistoryView.setVisible(true);
             break;
         }
+    }
+
+    public TCEPHistoryController getHistoryController() {
+    return historyController;
+}
+    public FormTableController getTableController() {
+        return tableController;  // assuming you already have this field
     }
 
 }

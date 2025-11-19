@@ -31,6 +31,8 @@ public class TCEPForm {
     private LocalDate startedDate;
     private String status;
 
+    private int formId;
+
     /**
      * Getters and setters for table view fields
      * Written by Jeffrey Chou (jxc033200)
@@ -46,6 +48,7 @@ public class TCEPForm {
     public int getInstitutionID()       { return institutionID; }
     public LocalDate getStartedDate()   { return startedDate; }
     public String getStatus()           { return status; }
+    public int getFormId()              { return formId; }
 
     // --- setters (used by controller when mapping ResultSet) ---
     public void setStudentName(String studentName)         { this.studentName = studentName; }
@@ -58,5 +61,6 @@ public class TCEPForm {
     public void setInstitutionID(int institutionID)        { this.institutionID = institutionID; }
     public void setStartedDate(LocalDate startedDate)      { this.startedDate = startedDate; }
     public void setStatus(String status)                   { this.status = status; }
+    public void setFormId(int formId)                      { this.formId = formId; }
 
 }

@@ -23,33 +23,44 @@ public class TCEPFormTable {
      * which is then bound to the TableView for display.
      * written by Jeffrey Chou (jxc033200)
      */
-    public void loadForms() throws SQLException {
-        rows.clear();
-        // this query ONLY uses columns we know exist right now
-        String sql =
-            "SELECT f.FormID, f.RequestDate, f.Term, f.Year, " +
-            "       f.StudentID, f.StatusID, f.NetID, s.Student_Name " +
-            "FROM TCEP_Form f " +
-            "JOIN Student s ON s.StudentID = f.StudentID " +
-            "ORDER BY f.RequestDate DESC";
+public void loadForms() throws SQLException {
+    rows.clear();
+    
+    String sql =
+        "SELECT f.FormID, f.RequestDate, f.Term, f.Year, " +
+        "       f.StudentID, f.StatusID, f.NetID, s.Student_Name, " +
+        "       ts.StatusName " +                          
+        "FROM TCEP_Form f " +
+        "JOIN Student s ON s.StudentID = f.StudentID " +
+        "JOIN Transfer_Status ts ON f.StatusID = ts.StatusID " +  
+        "ORDER BY f.RequestDate DESC";
 
-        Connection conn = TCEPDatabaseService.getConnection();
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery();
+    try (Connection conn = TCEPDatabaseService.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
 
         while (rs.next()) {
             TCEPForm f = new TCEPForm(); 
+            
+            // THIS IS THE KEY LINE YOU WERE MISSING
+            f.setFormId(rs.getInt("FormID"));                                     
+            
             f.setStudentName(rs.getString("Student_Name"));    
             f.setUtdId(String.valueOf(rs.getInt("StudentID")));    
             f.setNetId(rs.getString("NetID"));
+            
             java.sql.Date d = rs.getDate("RequestDate");
             if (d != null) {
                 f.setStartedDate(d.toLocalDate());
             }
-            f.setStatus(String.valueOf(rs.getInt("StatusID")));
+            
+            // show actual status like "Pending", "Approved", etc.
+            f.setStatus(rs.getString("StatusName"));                              
+            
             rows.add(f);
         }
     }
+}
 
     public TCEPForm createBlankForm() {
         TCEPForm newForm = new TCEPForm();

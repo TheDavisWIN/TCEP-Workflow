@@ -131,5 +131,32 @@ public class FormTableController {
         }
     }
 
+
+    /**
+ * Refreshes the entire form table by re-querying the database.
+ * Called after Approve/Deny/Send Back so the status column updates instantly.
+ * Andrew Robertson (AMR220023)
+ */
+
+    public void refreshTable() {
+        try {
+            formTableObject.loadForms();           // ← pulls fresh data from DB
+            masterData.clear();
+            masterData.addAll(formTableObject.rows);  // ← updates the ObservableList
+
+            // Also re-apply current search filter so it doesn't show everything again
+            onSearchChanged();
+
+            if (dbStatus != null) {
+                dbStatus.setText("DB: refreshed " + formTableObject.rows.size() + " form(s)");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (dbStatus != null) {
+                dbStatus.setText("DB: refresh failed");
+            }
+        }
+    }
+
 }
  

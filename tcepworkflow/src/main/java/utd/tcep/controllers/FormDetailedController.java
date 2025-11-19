@@ -66,6 +66,7 @@ public class FormDetailedController {
     @FXML private Button viewHistoryButton;
 
     private Node viewHistoryRoot;
+    private int currentFormId = -1;
 
     // Setup property listeners for fields in the form
     // Written by Ryan Pham (rkp200003)
@@ -117,8 +118,11 @@ public class FormDetailedController {
 
         // Wire buttons now that nav exists
         if (viewHistoryButton != null) {
-            viewHistoryButton.setOnAction(e -> navigationController.swapView(NavigationController.View.History));
-        }
+                viewHistoryButton.setOnAction(e -> {
+                navigationController.swapView(NavigationController.View.History);
+                navigationController.getHistoryController().loadHistoryForForm(currentFormId);
+            });
+}
         if (acceptButton != null) {
             acceptButton.setOnAction(e -> {
                 try { handleAccept(); } catch (IOException ex) { ex.printStackTrace(); }
@@ -291,64 +295,71 @@ public class FormDetailedController {
     
     // Changes made to approval action
     // Written by Nicolas Hartono (nxh210004)
+    //added refreshtable() -- Andrew Robertson (AMR22023)
     @FXML
     public void confirmApproval() throws IOException {
-        String reason = approvalReasonCombo == null ? null : approvalReasonCombo.getValue();
-        if ("Other".equals(reason) && approvalReasonOtherField != null) {
-            reason = approvalReasonOtherField.getText();
+        String reason = approvalReasonCombo.getValue();
+        if ("Other".equals(reason) && approvalReasonOtherField != null && !approvalReasonOtherField.getText().trim().isEmpty()) {
+            reason = approvalReasonOtherField.getText().trim();
         }
-        String recipient = approvalRecipientCombo == null ? null : approvalRecipientCombo.getValue();
-        System.out.println("Approval confirmed. Reason: " + reason + ", Recipient: " + recipient);
+        String comment = "Approved";
+        if (reason != null && !reason.isEmpty()) {
+            comment += " - " + reason;
+        }
 
-        // TODO: persist approval action or update model here
-        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formapprovalview.fxml"));
-
-        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
-        loader.setController(this);
-        Node overlayRoot = loader.load();
+        TCEPDatabaseService.logStatusChange(
+            currentForm.getFormId(),
+            4,  // StatusID for Approved
+            comment,
+            1   // AdvisorID — change to real logged-in advisor later
+        );
 
         closeOverlay();
+        navigationController.swapView(NavigationController.View.Table);
+        navigationController.getTableController().refreshTable(); // or refresh current view
     }
 
     // Changes made to denial action
     // Written by Nicolas Hartono (nxh210004)
+    //added refreshtable() -- Andrew Robertson (AMR22023)
     @FXML
     public void confirmDenial() throws IOException {
-        String reason = denialReasonCombo == null ? null : denialReasonCombo.getValue();
-        if ("Other".equals(reason) && denialReasonOtherField != null) {
-            reason = denialReasonOtherField.getText();
+        String reason = denialReasonCombo.getValue();
+        if ("Other".equals(reason) && denialReasonOtherField != null && !denialReasonOtherField.getText().trim().isEmpty()) {
+            reason = denialReasonOtherField.getText().trim();
         }
-        String recipient = denialRecipientCombo == null ? null : denialRecipientCombo.getValue();
-        System.out.println("Denial confirmed. Reason: " + reason + ", Recipient: " + recipient);
+        String comment = "Denied";
+        if (reason != null && !reason.isEmpty()) {
+            comment += " - " + reason;
+        }
 
-        // TODO: persist denial action or update model here
-        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdenialview.fxml"));
-
-        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
-        loader.setController(this);
-        Node overlayRoot = loader.load();
+        TCEPDatabaseService.logStatusChange(currentForm.getFormId(), 5, comment, 1); // 5 = Denied
 
         closeOverlay();
+        navigationController.swapView(NavigationController.View.Table);
+        navigationController.getTableController().refreshTable();
     }
 
     // Changes made to send back action
     // Written by Nicolas Hartono (nxh210004)
+    //added refreshtable() -- Andrew Robertson (AMR22023)
     @FXML
     public void confirmSendBack() throws IOException {
-        String reason = sendBackReasonCombo == null ? null : sendBackReasonCombo.getValue();
-        if ("Other".equals(reason) && sendBackReasonOtherField != null) {
-            reason = sendBackReasonOtherField.getText();
+        String reason = sendBackReasonCombo.getValue();
+        if ("Other".equals(reason) && sendBackReasonOtherField != null && !sendBackReasonOtherField.getText().trim().isEmpty()) {
+            reason = sendBackReasonOtherField.getText().trim();
         }
-        String recipient = sendBackRecipientCombo == null ? null : sendBackRecipientCombo.getValue();
-        System.out.println("Send back confirmed. Reason: " + reason + ", Recipient: " + recipient);
 
-        // TODO: perform any DB updates or messaging here using reason/recipient
-        FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formsendbackview.fxml"));
+        String comment = "Sent Back";
+        if (reason != null && !reason.isEmpty()) {
+            comment += " - " + reason;
+        }
 
-        // Use this controller for overlay callbacks (so overlay can call closeOverlay())
-        loader.setController(this);
-        Node overlayRoot = loader.load();
+        TCEPDatabaseService.logStatusChange(currentForm.getFormId(), 6, comment, 1); // 6 = Sent Back for Revision
+
         closeOverlay();
+        navigationController.swapView(NavigationController.View.Table);
+        navigationController.getTableController().refreshTable();
     }
 
     // Clear all fields in the form
@@ -371,20 +382,20 @@ public class FormDetailedController {
     // Set currently managed form and fill all text fields in UI when set
     // Written by Ryan Pham (rkp200003)
     public void setForm(TCEPForm form) {
-        currentForm = form;
-        String studentID = form.getUtdId();
+        this.currentForm = form;
+        this.currentFormId = form.getFormId();  // Assuming TCEPForm has getFormId()
 
         clearForm();
 
-        if (form.getStudentName() != null)
-        {
+        if (form.getStudentName() != null) {
             String[] nameSplit = form.getStudentName().split(" ");
-
-            firstNameField.setText(nameSplit[0]);
-            lastNameField.setText(nameSplit[1]);
+            if (nameSplit.length >= 2) {
+                firstNameField.setText(nameSplit[0]);
+                lastNameField.setText(nameSplit[1]);
+            }
         }
 
-        loadByID(studentID);
+        loadByID(form.getUtdId());
     }
 
     // Written by Ryan Pham (rkp200003)

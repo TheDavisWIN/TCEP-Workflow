@@ -18,7 +18,7 @@ Andrew Robertson (AMR220023)
     <center>
         <VBox spacing="25" style="-fx-padding: 30;" VBox.vgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="20">
-                <Button text="Back to Form" style="-fx-text-fill: black;" fx:id="backToFormButton" onAction="#handleBackToForm"/>
+                <Button text="Back to Form" style="-fx-text-fill: black;" fx:id="backToFormButton"/>
             </HBox>
 
             <HBox alignment="CENTER_LEFT" spacing="20">

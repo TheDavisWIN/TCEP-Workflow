@@ -4,9 +4,15 @@
 
 package utd.tcep.db;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import utd.tcep.data.FormHistoryEntry;
 
 public class TCEPDatabaseService {
 
@@ -63,4 +69,119 @@ public class TCEPDatabaseService {
             e.printStackTrace();
         }
     }
+
+
+ /**
+ * Returns full history for a specific form with readable status names and advisor name.
+ * Used by TCEPHistoryController to populate the history table.
+ * Andrew Robertson (AMR220023)
+ */
+
+public static ObservableList<FormHistoryEntry> getFormHistory(int formId) {
+    ObservableList<FormHistoryEntry> history = FXCollections.observableArrayList();
+    
+    String sql = "SELECT " +
+                 "    h.Changed_On as date, " +
+                 "    ts.StatusName as action, " +
+                 "    COALESCE(a.Advisor_Name, 'System') as reviewer, " +
+                 "    h.Comments " +
+                 "FROM tcep_status_history h " +
+                 "JOIN transfer_status ts ON h.StatusID = ts.StatusID " +
+                 "LEFT JOIN advisor a ON h.AdvisorID = a.AdvisorID " +
+                 "WHERE h.FormID = ? " +
+                 "ORDER BY h.Changed_On DESC";
+
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+         
+        ps.setInt(1, formId);
+        ResultSet rs = ps.executeQuery();
+        
+        while (rs.next()) {
+            String dateStr = rs.getTimestamp("date")
+                .toLocalDateTime()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                
+            history.add(new FormHistoryEntry(
+                dateStr,
+                rs.getString("action"),
+                rs.getString("reviewer")
+            ));
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return history;
+}
+
+
+
+/**
+ * Logs a status change in tcep_status_history and updates the current StatusID in tcep_form.
+ * Called whenever advisor clicks Approve / Deny / Send Back.
+ * Ensures both the main table and history view stay in sync.
+ * Andrew Robertson (AMR220023)
+ */
+public static void logStatusChange(int formId, int newStatusId, String comments, Integer advisorId) {
+    String historySql = "INSERT INTO tcep_status_history (FormID, StatusID, Changed_On, Comments, AdvisorID) " +
+                        "VALUES (?, ?, NOW(), ?, ?)";
+
+    try (Connection conn = getConnection();
+         PreparedStatement historyPs = conn.prepareStatement(historySql);
+         PreparedStatement updatePs = conn.prepareStatement(
+             "UPDATE tcep_form SET StatusID = ? WHERE FormID = ?")) {
+
+        // First: Insert into history
+        historyPs.setInt(1, formId);
+        historyPs.setInt(2, newStatusId);
+        historyPs.setString(3, comments == null || comments.trim().isEmpty() ? null : comments.trim());
+        if (advisorId == null) {
+            historyPs.setNull(4, java.sql.Types.INTEGER);
+        } else {
+            historyPs.setInt(4, advisorId);
+        }
+        historyPs.executeUpdate();
+
+        // Second: Update the form's current status
+        updatePs.setInt(1, newStatusId);
+        updatePs.setInt(2, formId);
+        updatePs.executeUpdate();
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        // Optional: show alert to user
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Failed to update form status.");
+            alert.show();
+        });
+    }
+}
+
+private static void updateFormStatus(int formId, int newStatusId) {
+    String sql = "UPDATE tcep_form SET StatusID = ? WHERE FormID = ?";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, newStatusId);
+        ps.setInt(2, formId);
+        ps.executeUpdate();
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
