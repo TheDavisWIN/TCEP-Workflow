@@ -5,22 +5,49 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" 
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="utd.tcep.controllers.FormDetailedController">
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="utd.tcep.TCEPHistoryController">
 
+    <left>
+        <VBox maxHeight="1.7976931348623157E308"
+              maxWidth="1.7976931348623157E308"
+              prefWidth="320"
+              spacing="0">
+            <children>
+                <Button fx:id="formsButton"
+                        maxHeight="1.7976931348623157E308"
+                        maxWidth="1.7976931348623157E308"
+                        onAction="#handleShowFormTable"
+                        prefHeight="80.0"
+                        style="-fx-font-size: 16px;"
+                        text="Forms" />
+                <Button fx:id="startEmptyFormButton"
+                        maxHeight="1.7976931348623157E308"
+                        maxWidth="1.7976931348623157E308"
+                        onAction="#handleShowBlankForm"
+                        prefHeight="80.0"
+                        style="-fx-font-size: 16px;"
+                        text="Start Empty Form" />
+                <Button fx:id="logoutButton"
+                        maxHeight="1.7976931348623157E308"
+                        maxWidth="1.7976931348623157E308"
+                        onAction="#handleLogout"
+                        prefHeight="80.0"
+                        style="-fx-font-size: 16px;"
+                        text="Logout" />
+            </children>
+        </VBox>
+    </left>
+
+    
     <center>
         <VBox prefHeight="915.0" prefWidth="733.0" spacing="25" style="-fx-padding: 30;">
             
-            <!-- Back Button -->
             <HBox alignment="CENTER_LEFT" spacing="20">
-                <Button fx:id="backToFormButton"
-                        onAction="#handleBackToForm"
-                        text="Back to Form"
-                        style="-fx-text-fill: black;" />
+                <Button text="Back to Form" style="-fx-text-fill: black;" fx:id="backToFormButton" onAction="#handleBackToForm"/>
             </HBox>
 
-            <!-- Title + Logo + Date -->
+            
             <HBox alignment="CENTER_LEFT" spacing="30">
                 <VBox spacing="10">
                     <ImageView fx:id="utdLogo" fitHeight="120" fitWidth="120" />
@@ -33,23 +60,16 @@
                 </VBox>
             </HBox>
 
-            <!-- Table Section: FULL WIDTH & HEIGHT -->
-            <VBox spacing="15" 
-                  style="-fx-padding: 20 0 0 0;" 
-                  VBox.vgrow="ALWAYS">
-                <TableView fx:id="historyTable" 
-                           VBox.vgrow="ALWAYS">
-                    <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                    </columnResizePolicy>
+            
+            <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
+                <TableView fx:id="historyTable" prefHeight="400" prefWidth="800">
                     <columns>
-                        <TableColumn fx:id="dateColumn" text="Date" />
-                        <TableColumn fx:id="actionColumn" text="Action" />
-                        <TableColumn fx:id="reviewerColumn" text="Reviewer" />
+                        <TableColumn fx:id="dateColumn" text="Date" prefWidth="250" />
+                        <TableColumn fx:id="actionColumn" text="Action" prefWidth="250" />
+                        <TableColumn fx:id="reviewerColumn" text="Reviewer" prefWidth="250" />
                     </columns>
                 </TableView>
             </VBox>
-
         </VBox>
     </center>
 </BorderPane>
