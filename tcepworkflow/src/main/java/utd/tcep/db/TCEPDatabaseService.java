@@ -72,6 +72,7 @@ public class TCEPDatabaseService {
     }
 
     // Written by Jeffrey Chou (jxc033200) and Ryan Pham (rkp200003)
+    // Retrieves ALL forms
     public static ObservableList<TCEPForm> getFormsFromDB() {
         ObservableList<TCEPForm> forms = FXCollections.observableArrayList();
         // this query ONLY uses columns we know exist right now
@@ -114,4 +115,73 @@ public class TCEPDatabaseService {
             e.printStackTrace();
         }
     }
+
+    // Written by Jeffrey Chou (jxc033200)
+    // Retrieves forms for a specific advisor (either as start or current advisor)
+    // This is used for the advisor's dashboard to show only relevant forms.
+    public static ObservableList<TCEPForm> getFormsForAdvisor(int advisorId) {
+        ObservableList<TCEPForm> forms = FXCollections.observableArrayList();
+
+        String sql =
+            "SELECT f.FormID, f.RequestDate, f.Term, f.Year, " +
+            "       f.StudentID, f.StatusID, f.NetID, " +
+            "       f.StartAdvisorID, f.CurrentAdvisorID, " +
+            "       s.Student_Name " +
+            "FROM tcep_form f " +
+            "JOIN student s ON s.StudentID = f.StudentID " +
+            "WHERE f.StartAdvisorID = ? OR f.CurrentAdvisorID = ? " +
+            "ORDER BY f.RequestDate DESC";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, advisorId);
+            ps.setInt(2, advisorId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                TCEPForm f = new TCEPForm(rs.getInt("FormID"));
+
+                f.setStudentName(rs.getString("Student_Name"));
+                f.setUtdId(String.valueOf(rs.getInt("StudentID")));
+                f.setNetId(rs.getString("NetID"));
+
+                java.sql.Date d = rs.getDate("RequestDate");
+                if (d != null) f.setStartedDate(d.toLocalDate());
+
+                f.setStatus(String.valueOf(rs.getInt("StatusID")));
+
+                forms.add(f);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return forms;
+    }
+    
+    //written by Jeffrey Chou (jxc033200)
+    //Looks up AdvisorID based on Advisor_Email at login.     
+    public static Integer getAdvisorIdByEmail(String email) {
+        String sql = "SELECT AdvisorID FROM advisor WHERE Advisor_Email = ? LIMIT 1";
+
+        try (Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("AdvisorID");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null; // not found
+    }
+
 }

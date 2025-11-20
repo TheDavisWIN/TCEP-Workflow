@@ -14,6 +14,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
+import utd.tcep.data.TCEPUser;
 import utd.tcep.db.TCEPDatabaseService;
 
 
@@ -35,6 +36,7 @@ public class NavigationController {
     private FormDetailedController formDetailedController;
     private FormTableController formTableController;
     private LoginController loginController;
+    private TCEPUser currentUser;
 
     // Automatically called on program start, saving controllers for future method calls
     // Ryan Pham (rkp200003)
@@ -96,8 +98,10 @@ public class NavigationController {
     }
 
     // Called when login is successful
-    // Davis Huynh (dxh170005)
-    public void onLoginSuccess() {
+    // Davis Huynh (dxh170005) and Jeffrey Chou (jxc033200)
+    public void onLoginSuccess(TCEPUser user) { //added parameter to pass user info (Jeffrey Chou - jxc033200)
+        this.currentUser = user;
+        formTableController.setCurrentUser(user); //pass user info to form table controller (Jeffrey Chou - jxc033200)
         navigationBar.setVisible(true);
         swapView(View.Table);
     }

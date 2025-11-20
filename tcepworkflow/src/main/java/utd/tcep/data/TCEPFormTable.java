@@ -24,8 +24,13 @@ public class TCEPFormTable {
      * which is then bound to the TableView for display.
      * written by Jeffrey Chou (jxc033200)
      */
+    //load all forms
     public void loadForms() {
         rows = TCEPDatabaseService.getFormsFromDB();
+    }
+    //load forms for only the logged in advisor
+    public void loadForms(int advisorId) {
+        rows = TCEPDatabaseService.getFormsForAdvisor(advisorId);
     }
 
     public TCEPForm createBlankForm() {

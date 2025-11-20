@@ -46,7 +46,7 @@ public class LoginController {
         if (userExists(username)) {
             TCEPUser user = new TCEPUser(username);
             System.out.println("Logged in as: " + user.getUsername());
-            navigationController.onLoginSuccess();
+            navigationController.onLoginSuccess(user); //added user to pass user info (Jeffrey Chou - jxc033200)
         } else {
             showError("User not found");
         }

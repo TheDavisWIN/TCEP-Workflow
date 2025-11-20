@@ -21,6 +21,8 @@ import javafx.scene.input.MouseButton;
 import utd.tcep.data.TCEPForm;
 import utd.tcep.data.TCEPFormTable;
 import utd.tcep.events.NavigationRequestEvent;
+import utd.tcep.data.TCEPUser;
+import utd.tcep.db.TCEPDatabaseService;
 
 public class FormTableController {
 
@@ -38,12 +40,51 @@ public class FormTableController {
     private ObservableList<TCEPForm> masterData = FXCollections.observableArrayList();
     private FilteredList<TCEPForm> filteredData;
     private TCEPFormTable formTableObject = new TCEPFormTable();
+    private TCEPUser currentUser;
 
     // Written by Ryan Pham (rkp200003)
     public TCEPFormTable getFormTableObject() {
         return formTableObject;
     }
 
+    // Written by Jeffrey Chou (jxc033200)
+    public void setCurrentUser(TCEPUser user) {
+        this.currentUser = user;
+        loadFormsForCurrentUser();
+    }
+
+    // Written by Jeffrey Chou (jxc033200)
+    // Loads forms for the currently logged in user (advisor)
+    private void loadFormsForCurrentUser() {
+        if (currentUser == null) {
+            return;
+        }
+
+        try {
+            // username is Advisor_Email
+            Integer advisorId = TCEPDatabaseService.getAdvisorIdByEmail(currentUser.getUsername());
+            if (advisorId == null) {
+                masterData.clear();
+                if (dbStatus != null) {
+                    dbStatus.setText("DB: ❌ Advisor not found for " + currentUser.getUsername());
+                }
+                return;
+            }
+
+            // this assumes TCEPFormTable has loadForms(int advisorId)
+            formTableObject.loadForms(advisorId);
+            masterData.setAll(formTableObject.rows);
+
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ❌ " + e.getMessage());
+            }
+        }
+    }
     /**
      * Initializes the Form Table View after the FXML is loaded.
      * <p>
@@ -86,32 +127,39 @@ public class FormTableController {
         filteredData = new FilteredList<>(masterData, p -> true); 
         formTable.setItems(filteredData);
 
-        // 3. load data from DB
-        try {
-            formTableObject.loadForms();
-            masterData.clear();
-            masterData.addAll(formTableObject.rows);
+        // 3. load data from DB - This will be used IF logged in user is someone who oversees ALL forms
+        // try {
+        //     formTableObject.loadForms();
+        //     masterData.clear();
+        //     masterData.addAll(formTableObject.rows);
 
-            if (dbStatus != null) {
-                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (dbStatus != null) {
-                dbStatus.setText("DB: ❌ " + e.getMessage());
-            }
-        }
+        //     if (dbStatus != null) {
+        //         dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
+        //     }
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        //     if (dbStatus != null) {
+        //         dbStatus.setText("DB: ❌ " + e.getMessage());
+        //     }
+        // }
     }
 
-    // Handles refresh button. Calls loadForms to re-query the DB.
+    // Handles refresh button. Calls loadForms to re-query the DB. Used for users that view ALL forms
+    // Written by Jeffrey Chou (jxc033200)
+    // @FXML
+    // private void onRefreshClicked() {
+    //     try {
+    //         formTableObject.loadForms();
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    // }
+
+    // refresh for the current user
     // Written by Jeffrey Chou (jxc033200)
     @FXML
     private void onRefreshClicked() {
-        try {
-            formTableObject.loadForms();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        loadFormsForCurrentUser();
     }
 
     // Handles search field input to filter the table
