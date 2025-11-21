@@ -77,8 +77,7 @@
 }
 
 .table-view .column-header {
-    -fx-background-color: #e4e4e4;
-    -fx-border-color: #767676;
+    -fx-border-color: #8a8a8a;
     -fx-border-width: 0 0 1 0;
 }
 
@@ -94,19 +93,29 @@
 }
 
 .table-row-cell {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: #f1f1f1;
+    -fx-border-color: #e2e2e2;
+    -fx-border-width: 0 0 1 0;
 }
 
 .table-row-cell:hover {
-    -fx-background-color: #e4e4e4;
+    -fx-background-color: #dadada;
 }
 
 .table-row-cell:odd {
-    -fx-background-color: #f1f1f1;
+    -fx-background-color: #e2e2e2;
 }
 
 .table-row-cell:odd:hover {
-    -fx-background-color: #dfdfdf;
+    -fx-background-color: #cccccc;
+}
+
+.table-row-cell:empty {
+    -fx-background-color: #FFFFFF;
+}
+
+.table-row-cell:empty:odd {
+    -fx-background-color: #FFFFFF;
 }
 
 #acceptButton {
