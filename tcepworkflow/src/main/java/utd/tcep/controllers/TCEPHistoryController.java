@@ -12,6 +12,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
 import utd.tcep.data.FormHistoryEntry;
 import utd.tcep.db.TCEPDatabaseService;
+import javafx.scene.control.Label;
 
 public class TCEPHistoryController {
 
@@ -20,6 +21,7 @@ public class TCEPHistoryController {
     @FXML private TableColumn<FormHistoryEntry, String> dateColumn;
     @FXML private TableColumn<FormHistoryEntry, String> actionColumn;
     @FXML private TableColumn<FormHistoryEntry, String> reviewerColumn;
+    @FXML private Label studentNameLabel;
 
     private NavigationController navigationController;
     private int currentFormId = -1;  // Will be set from FormDetailedController
@@ -65,4 +67,11 @@ public class TCEPHistoryController {
         // Optional: show placeholder if empty
         historyTable.setPlaceholder(new javafx.scene.control.Label("No history available for this form."));
     }
+
+    public void setStudentInfo(String fullName, String studentId) {
+    if (studentNameLabel != null) {
+        studentNameLabel.setText("History for: " + fullName + " (" + studentId + ")");
+    }
+}
+
 }

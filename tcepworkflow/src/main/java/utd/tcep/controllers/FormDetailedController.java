@@ -151,14 +151,26 @@ public class FormDetailedController {
             });
         }
 
-        // Wire buttons now that nav exists
-        if (viewHistoryButton != null) {
-                viewHistoryButton.setOnAction(e -> {
-                navigationController.swapView(NavigationController.View.History);
-                navigationController.getHistoryController().loadHistoryForForm(currentFormId);
-            });
-}
+            // Wire buttons now that nav exists
+    if (viewHistoryButton != null) {
+        viewHistoryButton.setOnAction(e -> {
+            navigationController.swapView(NavigationController.View.History);
+            
+            TCEPHistoryController historyCtrl = navigationController.getHistoryController();
+            historyCtrl.loadHistoryForForm(currentFormId);
+            
+            // Build the student's full name
+            String fullName = firstNameField.getText().trim() + " " + lastNameField.getText().trim();
+            if (!miField.getText().trim().isEmpty()) {
+                fullName += " " + miField.getText().trim() + ".";
+            }
+            
+            // Show the student name in the history view
+            historyCtrl.setStudentInfo(fullName.trim(), studentIdField.getText().trim());
+        });
     }
+}
+    
     @FXML
     private void handleViewHistory() {
         navigationController.swapView(NavigationController.View.History);
