@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * JavaFX controller that handles the view of the table of forms
- * Allows opening of forms and quick actions from the table view
+ * Allows opening of forms from the table view
 ***********************************************************************************************************************/
 
 package utd.tcep.controllers;
@@ -52,7 +52,8 @@ public class FormTableController {
      * It binds each TableColumn to the corresponding property in the TCEPForm model
      * using PropertyValueFactory, ensuring data from the database appears in the correct column.
      * It also performs an initial call to loadForms() to populate the table when the scene is first displayed.
-     * written by Jeffrey Chou (jxc033200) and Ryan Pham (rkp200003)
+     * written by Jeffrey Chou (jxc033200)
+     * and modified by Ryan Pham (rkp200003) to use JavaFX properties
      */
     @FXML
     public void initialize() {

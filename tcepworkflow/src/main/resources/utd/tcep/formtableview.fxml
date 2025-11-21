@@ -9,7 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="formTableContainer" prefHeight="770.0" prefWidth="1207.0" spacing="20.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormTableController">
+<VBox fx:id="formTableContainer" prefHeight="770.0" prefWidth="1207.0" spacing="20.0" stylesheets="@style/tcepstyle.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormTableController">
    <children>
       <Button onAction="#onRefreshClicked" text="Refresh" />
       <Label fx:id="dbStatus" text="DB: not tested yet" />
@@ -17,9 +17,9 @@
       <TableView fx:id="formTable" prefHeight="299.0" prefWidth="704.0" VBox.vgrow="ALWAYS">
          <columns>
             <TableColumn fx:id="studentNameCol" prefWidth="208.0" text="Student Name" />
-            <TableColumn fx:id="utdIdCol" minWidth="0.0" prefWidth="251.0" text="UTD ID" />
-            <TableColumn fx:id="netIdCol" minWidth="0.0" prefWidth="320.0" text="Net ID" />
-            <TableColumn fx:id="schoolNameColumn" text="Institution" />
+            <TableColumn fx:id="utdIdCol" minWidth="0.0" prefWidth="189.0" text="UTD ID" />
+            <TableColumn fx:id="netIdCol" minWidth="0.0" prefWidth="226.0" text="Net ID" />
+            <TableColumn fx:id="schoolNameColumn" prefWidth="182.0" text="Institution" />
             <TableColumn fx:id="dateStartedCol" minWidth="0.0" prefWidth="192.0" text="Date Started" />
             <TableColumn fx:id="statusCol" maxWidth="574.0" minWidth="0.0" prefWidth="194.0" text="Status" />
          </columns>

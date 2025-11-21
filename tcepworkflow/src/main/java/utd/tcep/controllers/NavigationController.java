@@ -127,6 +127,7 @@ public class NavigationController {
                 break;
             case Table:
                 formTableView.setVisible(true);
+                formDetailedController.onNavigatedAway();
                 break;
         }
     }
