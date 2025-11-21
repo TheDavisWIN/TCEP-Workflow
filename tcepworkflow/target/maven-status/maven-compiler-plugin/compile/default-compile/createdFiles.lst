@@ -4,7 +4,7 @@ utd\tcep\controllers\NavigationController$View.class
 utd\tcep\data\TCEPForm$Term.class
 utd\tcep\data\TCEPForm.class
 utd\tcep\controllers\PDFFieldInspector.class
-utd\tcep\data\FormTable.class
+utd\tcep\data\TCEPStatusChange.class
 module-info.class
 utd\tcep\controllers\LoginController.class
 utd\tcep\events\NavigationRequestEvent.class
@@ -12,5 +12,6 @@ utd\tcep\data\TCEPUser.class
 utd\tcep\controllers\PDFPreviewController.class
 utd\tcep\db\TCEPDatabaseService.class
 utd\tcep\main\TCEPWorkflowApp.class
+utd\tcep\data\TCEPStatusHistory.class
 utd\tcep\data\TCEPFormTable.class
 utd\tcep\controllers\FormDetailedController.class

@@ -28,6 +28,11 @@ public class TCEPForm {
     public int equivalentCourseID;
     public int institutionID;
 
+    // Action flags persisted in DB
+    private boolean approved;
+    private boolean denied;
+    private boolean sendBack;
+
     //Form Table View fields
     private SimpleStringProperty studentName;   
     private SimpleStringProperty utdId;         
@@ -89,5 +94,15 @@ public class TCEPForm {
     public void setIncomingID(int incomingCourseID)        { this.incomingCourseID = incomingCourseID; }
     public void setEquivalentID(int equivalentCourseID)    { this.equivalentCourseID = equivalentCourseID; }
     public void setInstitutionID(int institutionID)        { this.institutionID = institutionID; }
+
+    // --- flags for approval/denial/send-back ---
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
+
+    public boolean isDenied() { return denied; }
+    public void setDenied(boolean denied) { this.denied = denied; }
+
+    public boolean isSendBack() { return sendBack; }
+    public void setSendBack(boolean sendBack) { this.sendBack = sendBack; }
 
 }

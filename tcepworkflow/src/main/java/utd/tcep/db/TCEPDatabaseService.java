@@ -15,6 +15,7 @@ import javafx.collections.ObservableList;
 import utd.tcep.data.TCEPForm;
 import utd.tcep.data.TCEPFormTable;
 
+
 public class TCEPDatabaseService {
 
     // connection info for local XAMPP MySQL instance.
@@ -73,20 +74,53 @@ public class TCEPDatabaseService {
 
     // Written by Jeffrey Chou (jxc033200) and Ryan Pham (rkp200003)
     public static ObservableList<TCEPForm> getFormsFromDB() {
+        return getFormsFromDB(null);
+    }
+
+    /**
+     * Get forms from database, optionally filtered by advisor ID.
+     * If advisorId is null, returns all forms.
+     * If advisorId is provided, returns only forms where:
+     *   1. Student is assigned to this advisor (Student.AdvisorID = advisorId), OR
+     *   2. Form has been sent to this advisor (tcep_form_status_history.AssignedAdvisorID = advisorId)
+     */
+    public static ObservableList<TCEPForm> getFormsFromDB(Integer advisorId) {
         ObservableList<TCEPForm> forms = FXCollections.observableArrayList();
-        // this query ONLY uses columns we know exist right now
-        String sql =
-            "SELECT f.FormID, f.RequestDate, f.Term, f.Year, " +
-            "       f.StudentID, f.StatusID, f.NetID, s.Student_Name " +
-            "FROM TCEP_Form f " +
-            "JOIN Student s ON s.StudentID = f.StudentID " +
-            "ORDER BY f.RequestDate DESC";
+        
+        String sql;
+        if (advisorId == null) {
+            // Return all forms (admin view)
+            sql = "SELECT f.FormID, f.RequestDate, f.Term, f.Year, " +
+                  "       f.StudentID, f.StatusID, f.NetID, s.Student_Name " +
+                  "FROM TCEP_Form f " +
+                  "JOIN Student s ON s.StudentID = f.StudentID " +
+                  "ORDER BY f.RequestDate DESC";
+        } else {
+            // Return forms assigned to or sent to this advisor
+            sql = "SELECT DISTINCT f.FormID, f.RequestDate, f.Term, f.Year, " +
+                  "       f.StudentID, f.StatusID, f.NetID, s.Student_Name " +
+                  "FROM TCEP_Form f " +
+                  "JOIN Student s ON s.StudentID = f.StudentID " +
+                  "LEFT JOIN tcep_form_status_history h ON h.FormID = f.FormID " +
+                  "WHERE s.AdvisorID = ? OR h.AssignedAdvisorID = ? " +
+                  "ORDER BY f.RequestDate DESC";
+        }
 
         try {
             Connection conn = TCEPDatabaseService.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
+            
+            if (advisorId != null) {
+                System.out.println("Loading forms for advisorId: " + advisorId);
+                ps.setInt(1, advisorId);
+                ps.setInt(2, advisorId);
+            } else {
+                System.out.println("Loading all forms (no advisor filter)");
+            }
+            
             ResultSet rs = ps.executeQuery();
-
+            
+            int count = 0;
             while (rs.next()) {
                 TCEPForm f = new TCEPForm(rs.getInt("FormID")); 
                 f.setStudentName(rs.getString("Student_Name"));    
@@ -98,12 +132,58 @@ public class TCEPDatabaseService {
                 }
                 f.setStatus(String.valueOf(rs.getInt("StatusID")));
                 forms.add(f);
+                count++;
             }
+            System.out.println("Loaded " + count + " forms from database");
         } catch (SQLException e) {
+            System.err.println("Error loading forms: " + e.getMessage());
             e.printStackTrace();
         }
 
         return forms;
+    }
+
+    /**
+     * Insert a status/history row for a form action.
+     * If advisorId is non-null, the row will be associated with that advisor.
+     * If departmentName is non-null, it will be stored in the DepartmentName column.
+     */
+    public static void addStatusChange(int formId, String actionType, String comments, Integer advisorId, String departmentName) {
+        String sql = "INSERT INTO tcep_form_status_history (FormID, ActionType, Comments, AssignedAdvisorID, DepartmentName, ActionDate) VALUES (?, ?, ?, ?, ?, NOW())";
+        try {
+            Connection conn = TCEPDatabaseService.getConnection();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, formId);
+                ps.setString(2, actionType);
+                ps.setString(3, comments);
+                if (advisorId != null) ps.setInt(4, advisorId); else ps.setNull(4, java.sql.Types.INTEGER);
+                if (departmentName != null) ps.setString(5, departmentName); else ps.setNull(5, java.sql.Types.VARCHAR);
+                int rows = ps.executeUpdate();
+                System.out.println("Added status change: FormID=" + formId + ", Action=" + actionType + ", AdvisorID=" + advisorId + ", Dept=" + departmentName + ", Rows affected=" + rows);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error adding status change: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Update the status of a form in the tcep_form table.
+     */
+    public static void updateFormStatus(int formId, int newStatusId) {
+        String sql = "UPDATE tcep_form SET StatusID = ? WHERE FormID = ?";
+        try {
+            Connection conn = TCEPDatabaseService.getConnection();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, newStatusId);
+                ps.setInt(2, formId);
+                int rows = ps.executeUpdate();
+                System.out.println("Updated form status: FormID=" + formId + ", NewStatusID=" + newStatusId + ", Rows affected=" + rows);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error updating form status: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public static void saveForms(TCEPFormTable formTable) {

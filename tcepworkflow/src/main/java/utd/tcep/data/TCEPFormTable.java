@@ -28,6 +28,14 @@ public class TCEPFormTable {
         rows = TCEPDatabaseService.getFormsFromDB();
     }
 
+    /**
+     * Load forms filtered by advisor ID.
+     * Only returns forms where the advisor is assigned or where forms have been sent to the advisor.
+     */
+    public void loadForms(Integer advisorId) {
+        rows = TCEPDatabaseService.getFormsFromDB(advisorId);
+    }
+
     public TCEPForm createBlankForm() {
         TCEPForm newForm = new TCEPForm(getNewFormID());
         newForm.setStartedDate(LocalDate.now());

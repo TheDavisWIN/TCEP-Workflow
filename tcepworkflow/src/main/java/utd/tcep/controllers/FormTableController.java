@@ -38,10 +38,25 @@ public class FormTableController {
     private ObservableList<TCEPForm> masterData = FXCollections.observableArrayList();
     private FilteredList<TCEPForm> filteredData;
     private TCEPFormTable formTableObject = new TCEPFormTable();
+    private utd.tcep.data.TCEPUser currentUser;
 
     // Written by Ryan Pham (rkp200003)
     public TCEPFormTable getFormTableObject() {
         return formTableObject;
+    }
+
+    public void setCurrentUser(utd.tcep.data.TCEPUser user) {
+        this.currentUser = user;
+    }
+
+    /**
+     * Removes a form from the table view without reloading from database.
+     * This is used when a form has been processed and should disappear from the current user's view.
+     */
+    public void removeFormFromUI(TCEPForm form) {
+        formTableObject.rows.remove(form);
+        masterData.remove(form);
+        System.out.println("Form removed from UI. Remaining forms: " + masterData.size());
     }
 
     /**
@@ -86,14 +101,16 @@ public class FormTableController {
         filteredData = new FilteredList<>(masterData, p -> true); 
         formTable.setItems(filteredData);
 
-        // 3. load data from DB
+        // 3. load data from DB (will be filtered by advisor when user logs in)
+        // Initial load shows all forms; after login, refreshMasterData() will filter by advisor
         try {
-            formTableObject.loadForms();
-            masterData.clear();
-            masterData.addAll(formTableObject.rows);
+            // Don't load forms here - wait for login to set currentUser
+            // formTableObject.loadForms();
+            // masterData.clear();
+            // masterData.addAll(formTableObject.rows);
 
             if (dbStatus != null) {
-                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
+                dbStatus.setText("DB: Ready to load forms");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,11 +124,7 @@ public class FormTableController {
     // Written by Jeffrey Chou (jxc033200)
     @FXML
     private void onRefreshClicked() {
-        try {
-            formTableObject.loadForms();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        refreshMasterData();
     }
 
     // Handles search field input to filter the table
@@ -132,8 +145,22 @@ public class FormTableController {
     }
 
     public void refreshMasterData() {
-        masterData.clear();
-        masterData.addAll(formTableObject.rows);
+        try {
+            Integer advisorId = (currentUser != null) ? currentUser.getAdvisorId() : null;
+            formTableObject.loadForms(advisorId);
+            masterData.clear();
+            masterData.addAll(formTableObject.rows);
+            
+            if (dbStatus != null) {
+                String userInfo = (advisorId != null) ? " for advisor " + advisorId : " (all)";
+                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)" + userInfo);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ❌ " + e.getMessage());
+            }
+        }
     }
 }
  

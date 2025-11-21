@@ -43,32 +43,35 @@ public class LoginController {
             return;
         }
 
-        if (userExists(username)) {
-            TCEPUser user = new TCEPUser(username);
-            System.out.println("Logged in as: " + user.getUsername());
-            navigationController.onLoginSuccess();
+        Integer advisorId = getAdvisorId(username);
+        if (advisorId != null) {
+            TCEPUser user = new TCEPUser(username, advisorId);
+            System.out.println("Logged in as: " + user.getUsername() + " (AdvisorID: " + advisorId + ")");
+            navigationController.onLoginSuccess(user);
         } else {
             showError("User not found");
         }
 
     }
 
-    // Check if user exists in the database
+    // Check if user exists in the database and return advisor ID
     // Written by Davis Huynh (dxh170005)
-    private boolean userExists(String username) {
-        String sql = "SELECT * FROM advisor WHERE Advisor_Email = ?";
+    private Integer getAdvisorId(String username) {
+        String sql = "SELECT AdvisorID FROM advisor WHERE Advisor_Email = ?";
         try {
             Connection conn = TCEPDatabaseService.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, username);
                 try (ResultSet rs = ps.executeQuery()) {
-                    return rs.next();
+                    if (rs.next()) {
+                        return rs.getInt("AdvisorID");
+                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
+        return null;
     }
 
     private void showError(String message) {

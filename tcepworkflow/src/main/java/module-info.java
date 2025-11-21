@@ -6,6 +6,7 @@ module utdtcep {
     requires java.sql;
     requires org.apache.pdfbox;
     requires java.desktop;
+    requires org.controlsfx.controls;
 
     opens utd.tcep.main to javafx.fxml;
     opens utd.tcep.controllers to javafx.fxml;

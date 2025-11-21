@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
+import utd.tcep.data.TCEPUser;
 
 
 public class NavigationController {
@@ -35,6 +36,7 @@ public class NavigationController {
     private FormDetailedController formDetailedController;
     private FormTableController formTableController;
     private LoginController loginController;
+    private TCEPUser currentUser;
 
     // Automatically called on program start, saving controllers for future method calls
     // Ryan Pham (rkp200003)
@@ -57,6 +59,10 @@ public class NavigationController {
         formTableController = formTableViewLoader.getController();
         loginController = loginViewLoader.getController();
         loginController.setNavigationController(this);
+        // Wire up form table controller reference so detailed view can remove forms
+        formDetailedController.setFormTableController(formTableController);
+        // Wire up navigation controller reference so detailed view can switch views
+        formDetailedController.setNavigationController(this);
 
         swapView(View.Login);
 
@@ -97,9 +103,14 @@ public class NavigationController {
 
     // Called when login is successful
     // Davis Huynh (dxh170005)
-    public void onLoginSuccess() {
+    public void onLoginSuccess(TCEPUser user) {
+        this.currentUser = user;
+        formDetailedController.setCurrentUser(user);
+        formTableController.setCurrentUser(user);
         navigationBar.setVisible(true);
         swapView(View.Table);
+        // Load forms filtered by this advisor
+        formTableController.refreshMasterData();
     }
 
     // Show or hide the navigation bar
