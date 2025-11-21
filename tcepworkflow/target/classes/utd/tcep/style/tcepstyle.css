@@ -118,6 +118,8 @@
     -fx-background-color: #FFFFFF;
 }
 
+
+/* Form Decision Buttons Styling */
 #acceptButton {
     -fx-background-color: #46d32a;
     -fx-border-color: #2f941a;
@@ -148,6 +150,23 @@
     -fx-text-fill: #ffffff;
     -fx-font-weight: bold;
     -fx-font-size: 18px;
+}
+
+/* Form Decision Buttons Styling (Hover) */
+#acceptButton:hover {
+    -fx-background-color: #2f941a;
+}
+
+#denyButton:hover {
+    -fx-background-color: #5f0d0d;
+}
+
+#sendBackButton:hover {
+    -fx-background-color: #3f3f3f;
+}
+
+#generatePdfButton:hover {
+    -fx-background-color: #102869;
 }
 
 .label-header {
