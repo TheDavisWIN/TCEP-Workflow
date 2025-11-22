@@ -1,6 +1,6 @@
 --Ayden Benel
 --Need to add NetID to the database since last time Student_ID was not enough, forgot there was a NetID and UtdID
---this is meant to be implemented after tcep.sql file, since it adds on
+--this is meant to be implemented after tcep.sql file
 
 --Adding the NetID, they are all unique no one has the same NetID
 ALTER TABLE student

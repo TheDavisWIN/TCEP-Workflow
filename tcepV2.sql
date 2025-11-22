@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 20, 2025 at 03:31 PM
+-- Generation Time: Nov 14, 2025 at 08:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -34,6 +34,14 @@ CREATE TABLE `advisor` (
   `DepartmentID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `advisor`
+--
+
+INSERT INTO `advisor` (`AdvisorID`, `Advisor_Name`, `Advisor_Email`, `DepartmentID`) VALUES
+(1, 'Jane Doe', 'jxd654321', 1),
+(2, 'John Doe', 'jxd123456', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -55,6 +63,13 @@ CREATE TABLE `department` (
   `DepartmentID` int(11) NOT NULL,
   `Department_Name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `department`
+--
+
+INSERT INTO `department` (`DepartmentID`, `Department_Name`) VALUES
+(1, 'Computer Science');
 
 -- --------------------------------------------------------
 
@@ -161529,6 +161544,13 @@ CREATE TABLE `status_category` (
   `Description` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `status_category`
+--
+
+INSERT INTO `status_category` (`CategoryID`, `CategoryName`, `Description`) VALUES
+(1, 'Pending', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -161540,8 +161562,19 @@ CREATE TABLE `student` (
   `Student_Name` varchar(100) NOT NULL,
   `Student_Email` varchar(100) NOT NULL,
   `DepartmentID` int(11) NOT NULL,
-  `AdvisorID` int(11) DEFAULT NULL
+  `AdvisorID` int(11) DEFAULT NULL,
+  `NetID` varchar(20) DEFAULT NULL,
+  `UtdID` int(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student`
+--
+
+INSERT INTO `student` (`StudentID`, `Student_Name`, `Student_Email`, `DepartmentID`, `AdvisorID`, `NetID`, `UtdID`) VALUES
+(1, 'John Smith', 'jxs123456', 1, 1, 'jxs123456', NULL),
+(2, 'Michael Jackson', 'mxj123456', 1, 2, NULL, 1234567890),
+(3, 'Charlotte Web', 'cxw123456', 1, 1, 'cxw123456', 2147483647);
 
 -- --------------------------------------------------------
 
@@ -161564,8 +161597,19 @@ CREATE TABLE `tcep_form` (
   `Incoming_CourseID` int(11) NOT NULL,
   `Equivalent_CourseID` int(11) DEFAULT NULL,
   `InstitutionID` int(11) NOT NULL,
-  `StatusID` int(11) NOT NULL
+  `StatusID` int(11) NOT NULL,
+  `NetID` varchar(20) DEFAULT NULL,
+  `UtdID` int(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tcep_form`
+--
+
+INSERT INTO `tcep_form` (`FormID`, `RequestDate`, `Term`, `Year`, `Degree_Requirement`, `Core_Designation`, `Supporting_Materials`, `DecisionDate`, `NotifiedDate`, `NotifiedMethod`, `StudentID`, `Incoming_CourseID`, `Equivalent_CourseID`, `InstitutionID`, `StatusID`, `NetID`, `UtdID`) VALUES
+(1, '2025-11-03', 'Spring', '2025', NULL, NULL, NULL, NULL, NULL, NULL, 1, 1515, 1, 2023, 1, NULL, NULL),
+(2, '2025-11-12', 'Fall', '2025', NULL, NULL, NULL, NULL, NULL, NULL, 2, 121647, 796, 2, 1, NULL, NULL),
+(3, '2025-11-13', 'Spring', '2024', NULL, NULL, NULL, NULL, NULL, NULL, 3, 87812, 562, 1, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -161580,7 +161624,9 @@ CREATE TABLE `tcep_status_history` (
   `FormID` int(11) NOT NULL,
   `StatusID` int(11) NOT NULL,
   `AdvisorID` int(11) DEFAULT NULL,
-  `StudentID` int(11) DEFAULT NULL
+  `StudentID` int(11) DEFAULT NULL,
+  `NetID` varchar(20) DEFAULT NULL,
+  `UtdID` int(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -161611,7 +161657,9 @@ CREATE TABLE `transfers` (
   `Equivalent_CourseID` int(11) NOT NULL,
   `GradeID` int(11) NOT NULL,
   `StatusID` int(11) NOT NULL,
-  `FormID` int(11) DEFAULT NULL
+  `FormID` int(11) DEFAULT NULL,
+  `NetID` varchar(20) DEFAULT NULL,
+  `UtdID` int(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -161636,6 +161684,13 @@ CREATE TABLE `transfer_status` (
   `StatusName` varchar(100) NOT NULL,
   `CategoryID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `transfer_status`
+--
+
+INSERT INTO `transfer_status` (`StatusID`, `StatusName`, `CategoryID`) VALUES
+(1, 'Pending', 1);
 
 --
 -- Indexes for dumped tables
@@ -161707,6 +161762,8 @@ ALTER TABLE `status_category`
 ALTER TABLE `student`
   ADD PRIMARY KEY (`StudentID`),
   ADD UNIQUE KEY `Student_Email` (`Student_Email`),
+  ADD UNIQUE KEY `NetID` (`NetID`),
+  ADD UNIQUE KEY `UtdID` (`UtdID`),
   ADD KEY `DepartmentID` (`DepartmentID`),
   ADD KEY `AdvisorID` (`AdvisorID`);
 
@@ -161719,7 +161776,9 @@ ALTER TABLE `tcep_form`
   ADD KEY `Incoming_CourseID` (`Incoming_CourseID`),
   ADD KEY `Equivalent_CourseID` (`Equivalent_CourseID`),
   ADD KEY `InstitutionID` (`InstitutionID`),
-  ADD KEY `StatusID` (`StatusID`);
+  ADD KEY `StatusID` (`StatusID`),
+  ADD KEY `fk_tcep_form_netid` (`NetID`),
+  ADD KEY `fk_tcep_form_utdid` (`UtdID`);
 
 --
 -- Indexes for table `tcep_status_history`
@@ -161729,7 +161788,9 @@ ALTER TABLE `tcep_status_history`
   ADD KEY `FormID` (`FormID`),
   ADD KEY `StatusID` (`StatusID`),
   ADD KEY `AdvisorID` (`AdvisorID`),
-  ADD KEY `StudentID` (`StudentID`);
+  ADD KEY `StudentID` (`StudentID`),
+  ADD KEY `fk_tcep_status_history_netid` (`NetID`),
+  ADD KEY `fk_tcep_status_history_utdid` (`UtdID`);
 
 --
 -- Indexes for table `team_members`
@@ -161748,7 +161809,9 @@ ALTER TABLE `transfers`
   ADD KEY `Equivalent_CourseID` (`Equivalent_CourseID`),
   ADD KEY `GradeID` (`GradeID`),
   ADD KEY `StatusID` (`StatusID`),
-  ADD KEY `FormID` (`FormID`);
+  ADD KEY `FormID` (`FormID`),
+  ADD KEY `fk_transfers_netid` (`NetID`),
+  ADD KEY `fk_transfers_utdid` (`UtdID`);
 
 --
 -- Indexes for table `transfers_team`
@@ -161773,13 +161836,13 @@ ALTER TABLE `transfer_status`
 -- AUTO_INCREMENT for table `advisor`
 --
 ALTER TABLE `advisor`
-  MODIFY `AdvisorID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `AdvisorID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `department`
 --
 ALTER TABLE `department`
-  MODIFY `DepartmentID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `DepartmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `equivalent_course`
@@ -161809,19 +161872,19 @@ ALTER TABLE `institution`
 -- AUTO_INCREMENT for table `status_category`
 --
 ALTER TABLE `status_category`
-  MODIFY `CategoryID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `CategoryID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `student`
 --
 ALTER TABLE `student`
-  MODIFY `StudentID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `StudentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `tcep_form`
 --
 ALTER TABLE `tcep_form`
-  MODIFY `FormID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `FormID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
 
 --
 -- AUTO_INCREMENT for table `tcep_status_history`
@@ -161845,7 +161908,7 @@ ALTER TABLE `transfers`
 -- AUTO_INCREMENT for table `transfer_status`
 --
 ALTER TABLE `transfer_status`
-  MODIFY `StatusID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `StatusID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
@@ -161889,6 +161952,8 @@ ALTER TABLE `student`
 -- Constraints for table `tcep_form`
 --
 ALTER TABLE `tcep_form`
+  ADD CONSTRAINT `fk_tcep_form_netid` FOREIGN KEY (`NetID`) REFERENCES `student` (`NetID`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_tcep_form_utdid` FOREIGN KEY (`UtdID`) REFERENCES `student` (`UtdID`) ON DELETE SET NULL,
   ADD CONSTRAINT `tcep_form_ibfk_1` FOREIGN KEY (`StudentID`) REFERENCES `student` (`StudentID`),
   ADD CONSTRAINT `tcep_form_ibfk_2` FOREIGN KEY (`Incoming_CourseID`) REFERENCES `incoming_course` (`Incoming_CourseID`),
   ADD CONSTRAINT `tcep_form_ibfk_3` FOREIGN KEY (`Equivalent_CourseID`) REFERENCES `equivalent_course` (`Equivalent_CourseID`),
@@ -161899,6 +161964,8 @@ ALTER TABLE `tcep_form`
 -- Constraints for table `tcep_status_history`
 --
 ALTER TABLE `tcep_status_history`
+  ADD CONSTRAINT `fk_tcep_status_history_netid` FOREIGN KEY (`NetID`) REFERENCES `student` (`NetID`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_tcep_status_history_utdid` FOREIGN KEY (`UtdID`) REFERENCES `student` (`UtdID`) ON DELETE SET NULL,
   ADD CONSTRAINT `tcep_status_history_ibfk_1` FOREIGN KEY (`FormID`) REFERENCES `tcep_form` (`FormID`),
   ADD CONSTRAINT `tcep_status_history_ibfk_2` FOREIGN KEY (`StatusID`) REFERENCES `transfer_status` (`StatusID`),
   ADD CONSTRAINT `tcep_status_history_ibfk_3` FOREIGN KEY (`AdvisorID`) REFERENCES `advisor` (`AdvisorID`),
@@ -161908,6 +161975,8 @@ ALTER TABLE `tcep_status_history`
 -- Constraints for table `transfers`
 --
 ALTER TABLE `transfers`
+  ADD CONSTRAINT `fk_transfers_netid` FOREIGN KEY (`NetID`) REFERENCES `student` (`NetID`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_transfers_utdid` FOREIGN KEY (`UtdID`) REFERENCES `student` (`UtdID`) ON DELETE SET NULL,
   ADD CONSTRAINT `transfers_ibfk_1` FOREIGN KEY (`StudentID`) REFERENCES `student` (`StudentID`),
   ADD CONSTRAINT `transfers_ibfk_2` FOREIGN KEY (`DepartmentID`) REFERENCES `department` (`DepartmentID`),
   ADD CONSTRAINT `transfers_ibfk_3` FOREIGN KEY (`Incoming_CourseID`) REFERENCES `incoming_course` (`Incoming_CourseID`),

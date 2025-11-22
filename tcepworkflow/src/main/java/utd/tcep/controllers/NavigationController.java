@@ -1,78 +1,136 @@
 /***********************************************************************************************************************
  * Handles navigation bar
+ * Ryan Pham (rkp200003)
 ***********************************************************************************************************************/
 
 package utd.tcep.controllers;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import utd.tcep.events.NavigationRequestEvent;
+import utd.tcep.main.TCEPWorkflowApp;
+import utd.tcep.db.TCEPDatabaseService;
+
 
 public class NavigationController {
 
+    public enum View {
+        Detailed,
+        Table,
+        Login
+    }
+
+    @FXML
+    private GridPane appGridPane;
+    private Node formDetailedView;
+    private Node formTableView;
+    private Node loginView;
+    @FXML
+    private VBox navigationBar;
+    private FormDetailedController formDetailedController;
+    private FormTableController formTableController;
+    private LoginController loginController;
+
+    // Automatically called on program start, saving controllers for future method calls
+    // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added Login view)
+    @FXML
+    public void initialize() throws IOException {
+        FXMLLoader formDetailedViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdetailedview.fxml"));
+        FXMLLoader formTableViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formtableview.fxml"));
+        FXMLLoader loginViewLoader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/loginview.fxml"));
+        formDetailedView = formDetailedViewLoader.load();
+        formTableView = formTableViewLoader.load();
+        loginView = loginViewLoader.load();
+        appGridPane.getChildren().add(loginView);
+        appGridPane.getChildren().add(formDetailedView);
+        appGridPane.getChildren().add(formTableView);
+        GridPane.setColumnIndex(loginView, 1);
+        GridPane.setColumnIndex(formDetailedView, 1);
+        GridPane.setColumnIndex(formTableView, 1);
+        formDetailedController = formDetailedViewLoader.getController();
+        formTableController = formTableViewLoader.getController();
+        loginController = loginViewLoader.getController();
+        loginController.setNavigationController(this);
+
+        swapView(View.Login);
+
+        // Handle when user left clicks on a row in the form table in order to open the form
+        formTableController.formTable.addEventHandler(NavigationRequestEvent.REQUEST, event -> {
+            swapView(View.Detailed);
+            formDetailedController.setForm(event.getForm());
+        });
+    }
+
     // Show the full form table
+    // Ryan Pham (rkp200003)
     @FXML
     private void handleShowFormTable() throws IOException {
-        
+        swapView(View.Table);
+        formTableController.refreshMasterData();
     }
+
+
+
 
     // Create a new form with blank fields
+    // Ryan Pham (rkp200003)
     @FXML
     private void handleShowBlankForm() throws IOException {
-        
+        swapView(View.Detailed);
+        formDetailedController.setForm(formTableController.getFormTableObject().createBlankForm());
     }
 
+    // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added logout functionality)
+    // Ayden Benel (acb210001) (added database closing)
     @FXML
     private void handleLogout() throws IOException {
-        
+        swapView(View.Login);
+        navigationBar.setVisible(false);
+        System.out.println("Logout");
+        TCEPDatabaseService.closeConnection();
+        loginController.resetFields();
     }
-    @FXML
-    private Label dbStatus; // Shows "DB: connected (...)" or error message. **FOR TESTING - REMOVE LATER**
 
-    /** ***FOR TESTING - REMOVE LATER***
-     *  Handler for the "Test DB Connection" button in main.fxml.     * 
-     *
-     *  - Opens a connection using TCEPDatabaseService (so we use the same settings everywhere).
-     *  - Runs a SELECT COUNT(*) on TCEP_Form: shows we can reach our actual app table.
-     *  - Runs SHOW TABLES: shows the schema exists even if the form table is still empty.
-     *  - Displays the result in the UI label so teammates/sponsor can see it without looking at console.
-     *
-     *  - This is a quick integration check between the JavaFX front end and the XAMPP/MySQL backend.
-     *  - Our TCEP_Form table might be empty during early development, so we also count tables to show “real” output.
-     */
-    @FXML
-    private void onTestDbClicked() {
-        String formCountSql = "SELECT COUNT(*) AS cnt FROM TCEP_Form";
-        String tableCountSql = "SHOW TABLES";
+    // Called when login is successful
+    // Davis Huynh (dxh170005)
+    public void onLoginSuccess() {
+        navigationBar.setVisible(true);
+        swapView(View.Table);
+    }
 
-        try (Connection conn = utd.tcep.db.TCEPDatabaseService.getConnection();
-            PreparedStatement formPs = conn.prepareStatement(formCountSql);
-            PreparedStatement tablePs = conn.prepareStatement(tableCountSql)) {
+    // Show or hide the navigation bar
+    // Davis Huynh (dxh170005)
+    public void showNavigationBar(boolean show) {
+        if (navigationBar != null) {
+            navigationBar.setVisible(show);
+        }
+    }
 
-            // Get form count
-            int formCount = 0;
-            try (ResultSet rs = formPs.executeQuery()) {
-                if (rs.next()) formCount = rs.getInt("cnt");
-            }
+    // Swap between different views and load FXML when navigation buttons are clicked
+    // Ryan Pham (rkp200003)
+    // Davis Huynh (dxh170005) (added Login view)
+    public void swapView(View view) {
+        loginView.setVisible(false);
+        formDetailedView.setVisible(false);
+        formTableView.setVisible(false);
 
-            // Get total number of tables
-            int tableCount = 0;
-            try (ResultSet rs = tablePs.executeQuery()) {
-                while (rs.next()) tableCount++;
-            }
-
-            // Display both results
-            String message = String.format("DB: ✅ connected (%d forms, %d tables)", formCount, tableCount);
-            dbStatus.setText(message);
-            System.out.println("✅ Database connected! " + message);
-
-        } catch (Exception e) {
-            dbStatus.setText("DB: ❌ not connected");
-            e.printStackTrace();
+        switch (view) {
+            case Login:
+                loginView.setVisible(true);
+                break;
+            case Detailed:
+                formDetailedView.setVisible(true);
+                break;
+            case Table:
+                formTableView.setVisible(true);
+                break;
         }
     }
 }
