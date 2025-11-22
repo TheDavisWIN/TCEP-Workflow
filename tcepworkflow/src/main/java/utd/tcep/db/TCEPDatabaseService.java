@@ -44,7 +44,7 @@ public class TCEPDatabaseService {
         return DriverManager.getConnection(URL, USER, PASS);
     }*/
 
-    //updated here by Ayden Benel
+    //updated here by Ayden Benel (acb210001)
     //one single connection for the DB, if there is no connection a new connection will be made
     public static synchronized Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
@@ -106,17 +106,8 @@ public class TCEPDatabaseService {
         return forms;
     }
 
-    /**********************************************************************************************
- * EQUIVALENCY VERIFICATION FUNCTIONS
- * These check whether:
- *  - Institution exists
- *  - Equivalent (UTD) course exists
- *  - Incoming transfer course exists
- *  - The mapping already exists in course_equivalency
- *
- * Returns detailed status messages for UI display.
- **********************************************************************************************/
 
+//Check if everything is in the databse or not, written by Ayden Benel (acb210001)
 //does institution exists
 public static String checkInstitution(String name) {
     String sql = "SELECT InstitutionID FROM institution WHERE Institution_Name = ?";
@@ -138,7 +129,7 @@ public static String checkInstitution(String name) {
 }
 
 
-//equivalent UTD course exists?
+//equivalent UTD course exists
 public static String checkEquivalentCourse(String utdCourseNumber) {
     String sql = "SELECT Equivalent_CourseID FROM equivalent_course WHERE UTDCourseNumber = ?";
     try (Connection conn = getConnection();
