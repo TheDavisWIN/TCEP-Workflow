@@ -5,41 +5,41 @@
 package utd.tcep.data;
 
 import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import utd.tcep.db.TCEPDatabaseService;
 
+/**
+ * Business Logic Layer - TCEPFormTable
+ * Transforms database results into domain objects (TCEPForm)
+ * Acts as a bridge between the database layer and presentation layer
+ * Written by Jeffrey Chou (jxc033200)
+ */
 public class TCEPFormTable {
     public ObservableList<TCEPForm> rows = FXCollections.observableArrayList();
 
     /**
-     * Retrieves form records from the MySQL database and populates the TableView.
-     * Executes a SQL SELECT query on the TCEP_Form table (and related tables in the future).
+     * Retrieves form records from the database service and populates the TableView.
+     * Calls the database layer to get data, then transforms ResultSet into TCEPForm objects.
      * Each row from the ResultSet is converted into a TCEPForm object and added to an ObservableList,
      * which is then bound to the TableView for display.
-     * written by Jeffrey Chou (jxc033200)
+     * Written by Jeffrey Chou (jxc033200)
      */
     public void loadForms() throws SQLException {
         rows.clear();
-        // this query ONLY uses columns we know exist right now
-        String sql =
-            "SELECT f.FormID, f.RequestDate, f.Term, f.Year, s.UtdID, s.NetID, " +
-            "       f.StudentID, f.StatusID, f.NetID, s.Student_Name, i.Institution_Name " +
-            "FROM TCEP_Form f " +
-            "JOIN Student s ON s.StudentID = f.StudentID " +
-            "JOIN Institution i ON i.InstitutionID = f.InstitutionID " +
-            "ORDER BY f.RequestDate DESC";
-
-        Connection conn = TCEPDatabaseService.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
+        
+        // Get data from database layer
+        try (ResultSet rs = TCEPDatabaseService.getAllForms()) {
+            // Transform ResultSet into domain objects
             while (rs.next()) {
-                TCEPForm f = new TCEPForm(); 
+                TCEPForm f = new TCEPForm();
+                
+                // Set FormID (primary key)
+                f.setFormId(rs.getInt("FormID"));
+                
+                // Set student information
                 f.setStudentName(rs.getString("Student_Name"));    
                 if (rs.getObject("UtdID") != null) {
                     f.setUtdId(String.valueOf(rs.getInt("UtdID")));
@@ -51,12 +51,19 @@ public class TCEPFormTable {
                 } else {
                     f.setNetId(null);
                 }
+                
+                // Set institution information
                 f.setSchoolName(rs.getString("Institution_Name"));
+                
+                // Set date
                 java.sql.Date d = rs.getDate("RequestDate");
                 if (d != null) {
                     f.setStartedDate(d.toLocalDate());
                 }
+                
+                // Set status
                 f.setStatus(String.valueOf(rs.getInt("StatusID")));
+                
                 rows.add(f);
             }
         }

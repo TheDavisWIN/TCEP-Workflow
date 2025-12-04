@@ -32,6 +32,7 @@ public class TCEPForm {
     private LocalDate startedDate;
     private String schoolName;
     private String status;
+    private String statusReason;  // Reason for denial or send back
 
     /**
      * Getters and setters for table view fields
@@ -50,6 +51,7 @@ public class TCEPForm {
     public LocalDate getStartedDate()   { return startedDate; }
     public String getSchoolName()       { return schoolName; }
     public String getStatus()           { return status; }
+    public String getStatusReason()     { return statusReason; }
 
     // --- setters (used by controller when mapping ResultSet) ---
     public void setFormId(int formId)                      { this.formId = formId; }
@@ -64,5 +66,6 @@ public class TCEPForm {
     public void setStartedDate(LocalDate startedDate)      { this.startedDate = startedDate; }
     public void setSchoolName(String schoolName)           { this.schoolName = schoolName; }
     public void setStatus(String status)                   { this.status = status; }
+    public void setStatusReason(String statusReason)       { this.statusReason = statusReason; }
 
 }

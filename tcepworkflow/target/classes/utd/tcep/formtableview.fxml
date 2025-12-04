@@ -9,7 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="formTableContainer" prefHeight="770.0" prefWidth="1207.0" spacing="20.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormTableController">
+<VBox fx:id="formTableContainer" prefHeight="770.0" prefWidth="1207.0" spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormTableController">
    <children>
       <Button onAction="#onRefreshClicked" text="Refresh" />
       <Label fx:id="dbStatus" text="DB: not tested yet" />
