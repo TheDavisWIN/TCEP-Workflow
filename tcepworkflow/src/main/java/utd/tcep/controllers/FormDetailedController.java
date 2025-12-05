@@ -1,6 +1,5 @@
 /***********************************************************************************************************************
  * JavaFX Controller for detailed interaction with fields in a TCEP form
- * Written by Ryan Pham (rkp200003)
 ***********************************************************************************************************************/
 
 package utd.tcep.controllers;
@@ -25,19 +24,16 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
-import javafx.geometry.Pos;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.scene.control.TextField;
 import javafx.scene.Node;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.control.Label;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -86,7 +82,12 @@ public class FormDetailedController {
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
     @FXML private Button deleteButton;
-    @FXML private AnchorPane overlayContainer;
+    @FXML private Button exportButton;
+    @FXML private Button pdfCancelButton;
+    @FXML private Button verifyEquivalencyButton;
+    @FXML private TextArea verificationResultsArea;
+    @FXML private HBox overlayContainerBackground;
+    @FXML private VBox overlayContainer;
     @FXML private ComboBox<String> sendBackReasonCombo;
     @FXML private ComboBox<String> sendBackRecipientCombo;
     @FXML private ComboBox<String> approvalReasonCombo;
@@ -100,12 +101,11 @@ public class FormDetailedController {
     @FXML private Button confirmDenialButton;
     @FXML private Button confirmSendBackButton;
     @FXML private ImageView previewImageView;
-    @FXML private Button exportButton;
-    @FXML private Button pdfCancelButton;
-    @FXML private Button verifyEquivalencyButton;
-    @FXML private TextArea verificationResultsArea;
     @FXML private Label statusIcon;
     @FXML private Label statusLabel;
+    @FXML private Label resultTitle;
+    @FXML private Label resultText;
+    
 
     // Setup property listeners for fields in the form
     // Written by Ryan Pham (rkp200003)
@@ -233,7 +233,7 @@ public class FormDetailedController {
         Node overlayRoot = loader.load();
 
         overlayContainer.getChildren().add(overlayRoot);
-        overlayContainer.setVisible(true);
+        overlayContainerBackground.setVisible(true);
 
         // populate send-back combo boxes if they exist in the loaded FXML
         if (sendBackReasonCombo != null) {
@@ -347,10 +347,10 @@ public class FormDetailedController {
     // Written by Nicolas Hartono (nxh210004)
     public void closeOverlay() {
         overlayContainer.getChildren().clear();
-        overlayContainer.setVisible(false);
+        overlayContainerBackground.setVisible(false);
     }
 
-    //Handle verification of course equivalency by checkin database for institution, courses
+//Handle verification of course equivalency by checkin database for institution, courses
     //Written by Ayden Benel (acb210000)
     @FXML
     private void handleVerifyEquivalency() throws IOException {
@@ -465,8 +465,9 @@ public class FormDetailedController {
         loadOverlay("/utd/tcep/formsendbackview");
     }
     
-    // Changes made to approval actio   n
+    // Changes made to approval action
     // Written by Nicolas Hartono (nxh210004)
+    // and modified by Ryan Pham (rkp200003) to add confirmation feedback
     @FXML
     public void confirmApproval() throws IOException {
         String reason = approvalReasonCombo == null ? null : approvalReasonCombo.getValue();
@@ -514,10 +515,16 @@ public class FormDetailedController {
         Node overlayRoot = loader.load();
 
         closeOverlay();
+
+        // Show confirmation feedback overlay (Written by Ryan Pham (rkp200003))
+        loadOverlay("/utd/tcep/formdecisionfeedbackoverlay");
+        resultTitle.setText("Form Accepted");
+        resultText.setText("The form has been accepted. You may now close this window.");
     }
 
     // Changes made to denial action
     // Written by Nicolas Hartono (nxh210004)
+    // and modified by Ryan Pham (rkp200003) to add confirmation feedback
     @FXML
     public void confirmDenial() throws IOException {
         String reason = denialReasonCombo == null ? null : denialReasonCombo.getValue();
@@ -561,11 +568,17 @@ public class FormDetailedController {
         Node overlayRoot = loader.load();
 
         closeOverlay();
+
+        // Show confirmation feedback overlay (Written by Ryan Pham (rkp200003))
+        loadOverlay("/utd/tcep/formdecisionfeedbackoverlay");
+        resultTitle.setText("Form Denied");
+        resultText.setText("The form has been denied. You may now close this window.");
     }
 
     // Changes made to send back action
     // Written by Nicolas Hartono (nxh210004)
     // Updated by Davis Huynh (dxh170005) to save reason to database
+    // and modified by Ryan Pham (rkp200003) to add confirmation feedback
     @FXML
     public void confirmSendBack() throws IOException {
         String reason = sendBackReasonCombo == null ? null : sendBackReasonCombo.getValue();
@@ -607,6 +620,11 @@ public class FormDetailedController {
         loader.setController(this);
         Node overlayRoot = loader.load();
         closeOverlay();
+
+        // Show confirmation feedback overlay (Written by Ryan Pham (rkp200003))
+        loadOverlay("/utd/tcep/formdecisionfeedbackoverlay");
+        resultTitle.setText("Form Sent Back");
+        resultText.setText("The form has been sent back. You may now close this window.");
     }
 
     @FXML
@@ -961,6 +979,7 @@ public class FormDetailedController {
     }
 
     // Concatenate first, middle, last names since DB only has one row for name
+    // Written by Ryan Pham (rkp200003)
     private void updateStudentName() {
         if (middleName != null && !middleName.isEmpty()) {
             currentForm.setStudentName(firstName + " " + middleName + " " + lastName);
@@ -982,6 +1001,13 @@ public class FormDetailedController {
         } else {
             System.err.println("Field not found in PDF form: " + fieldName);
         }
+    }
+
+    // Called when navigating away from detailed form view
+    // Written by Ryan Pham (rkp200003)
+    public void onNavigatedAway() {
+        closeOverlay();
+        setForm(null);
     }
 
     @FXML

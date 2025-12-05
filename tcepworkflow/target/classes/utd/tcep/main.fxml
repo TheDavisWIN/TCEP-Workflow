@@ -31,7 +31,6 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-
 <!-- FXML created by Ryan Pham -->
 
 <?import javafx.geometry.Insets?>
@@ -43,8 +42,9 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.NavigationController">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="1080.0" prefWidth="1920.0" stylesheets="@style/tcepstyle.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.NavigationController">
   <children>
+      <Label contentDisplay="CENTER" maxWidth="1.7976931348623157E308" styleClass="app-header" text="ECS TCEP Form Manager" textAlignment="CENTER" />
     <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
          <opaqueInsets>
             <Insets />
@@ -60,7 +60,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <VBox fx:id="navigationBar" visible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
+                  <VBox fx:id="navigationBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" visible="false" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
                      <children>
                         <VBox alignment="CENTER" spacing="5" style="-fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-width: 1;">
                            <children>
