@@ -5,9 +5,9 @@
 
 package utd.tcep.controllers;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Map;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -44,8 +44,24 @@ public class LoginController {
         }
 
         if (userExists(username)) {
-            TCEPUser user = new TCEPUser(username);
-            System.out.println("Logged in as: " + user.getUsername());
+            try {
+                Map<String, Object> advisor = TCEPDatabaseService.getAdvisorByEmail(username);
+                if (advisor != null) {
+                    TCEPUser.setCurrentUser(
+                        username,
+                        (Integer) advisor.get("AdvisorID"),
+                        (String) advisor.get("Advisor_Name")
+                    );
+                    System.out.println("Logged in as: " + advisor.get("Advisor_Name") + " (ID: " + advisor.get("AdvisorID") + ")");
+                } else {
+                    TCEPUser.setCurrentUser(username, null, null);
+                    System.out.println("Logged in as: " + username);
+                }
+            } catch (SQLException e) {
+                System.err.println("Error loading advisor info: " + e.getMessage());
+                TCEPUser.setCurrentUser(username, null, null);
+            }
+            
             navigationController.onLoginSuccess();
         } else {
             showError("User not found");
@@ -56,16 +72,9 @@ public class LoginController {
     // Check if user exists in the database
     // Written by Davis Huynh (dxh170005)
     private boolean userExists(String username) {
-        String sql = "SELECT * FROM advisor WHERE Advisor_Email = ?";
         try {
-            Connection conn = TCEPDatabaseService.getConnection();
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, username);
-                try (ResultSet rs = ps.executeQuery()) {
-                    return rs.next();
-                }
-            }
-        } catch (Exception e) {
+            return TCEPDatabaseService.userExists(username);
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }

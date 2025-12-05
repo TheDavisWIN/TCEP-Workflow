@@ -7,7 +7,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 
 public class PDFFieldInspector {
     public static void main(String[] args) {
-        try (PDDocument pdf = PDDocument.load(new File("tcepworkflow/src/main//resources/utd/tcep/Blank TCEP.pdf"))) {
+        try (PDDocument pdf = PDDocument.load(new File("src/main/resources/utd/tcep/Blank TCEP.pdf"))) {
             PDAcroForm form = pdf.getDocumentCatalog().getAcroForm();
             if (form != null) {
                 System.out.println("=== PDF Field Names ===");

@@ -14,18 +14,59 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import utd.tcep.db.TCEPDatabaseService;
 
+/**
+ * Business Logic Layer - TCEPFormTable
+ * Transforms database results into domain objects (TCEPForm)
+ * Acts as a bridge between the database layer and presentation layer
+ * Written by Jeffrey Chou (jxc033200)
+ */
 public class TCEPFormTable {
     public ObservableList<TCEPForm> rows = FXCollections.observableArrayList();
 
     /**
-     * Retrieves form records from the MySQL database and populates the TableView.
-     * Executes a SQL SELECT query on the TCEP_Form table (and related tables in the future).
+     * Retrieves form records from the database service and populates the TableView.
+     * Calls the database layer to get data, then transforms ResultSet into TCEPForm objects.
      * Each row from the ResultSet is converted into a TCEPForm object and added to an ObservableList,
      * which is then bound to the TableView for display.
-     * written by Jeffrey Chou (jxc033200)
+     * Written by Jeffrey Chou (jxc033200)
      */
-    public void loadForms() {
-        rows = TCEPDatabaseService.getFormsFromDB();
+    public void loadForms() throws SQLException {
+        rows.clear();
+        
+        // Get data from database layer
+        try (ResultSet rs = TCEPDatabaseService.getAllForms()) {
+            // Transform ResultSet into domain objects
+            while (rs.next()) {
+                TCEPForm f = new TCEPForm(rs.getInt("FormID"));
+                
+                // Set student information
+                f.setStudentName(rs.getString("Student_Name"));    
+                if (rs.getObject("UtdID") != null) {
+                    f.setUtdId(String.valueOf(rs.getInt("UtdID")));
+                } else {
+                    f.setUtdId(null);
+                }
+                if (rs.getObject("NetID") != null) {
+                    f.setNetId(rs.getString("NetID"));
+                } else {
+                    f.setNetId(null);
+                }
+                
+                // Set institution information
+                f.setSchoolName(rs.getString("Institution_Name"));
+                
+                // Set date
+                java.sql.Date d = rs.getDate("RequestDate");
+                if (d != null) {
+                    f.setStartedDate(d.toLocalDate());
+                }
+                
+                // Set status
+                f.setStatus(String.valueOf(rs.getInt("StatusID")));
+                
+                rows.add(f);
+            }
+        }
     }
 
     public TCEPForm createBlankForm() {

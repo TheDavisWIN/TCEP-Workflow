@@ -15,7 +15,12 @@
          <children>
             <HBox alignment="CENTER_LEFT" spacing="20">
                <children>
-                  <Button style="-fx-text-fill: black;" text="View History" />
+                  <Button fx:id="viewHistoryButton" style="-fx-text-fill: black;" text="View History" />
+                  <Button fx:id="editButton" style="-fx-text-fill: black;" text="Edit" />
+                  <Button fx:id="generatePdfButton" style="-fx-text-fill: black;" text="Generate PDF" />
+                  <Button fx:id="deleteButton" style="-fx-background-color: #D32F2F; -fx-text-fill: white; -fx-font-weight: bold;" text="Delete" />
+                  <Button fx:id="saveButton" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Save" />
+                  <Button fx:id="cancelButton" style="-fx-background-color: #9E9E9E; -fx-text-fill: white; -fx-font-weight: bold;" text="Cancel" />
                </children>
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="30">
@@ -137,7 +142,6 @@
                   <Button fx:id="acceptButton" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Accept" HBox.hgrow="ALWAYS" />
                   <Button fx:id="denyButton" maxWidth="Infinity" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-weight: bold;" text="Deny" HBox.hgrow="ALWAYS" />
                   <Button fx:id="sendBackButton" maxWidth="Infinity" style="-fx-background-color: #9E9E9E; -fx-text-fill: white; -fx-font-weight: bold;" text="Send Back" HBox.hgrow="ALWAYS" />
-                  <Button fx:id="generatePdfButton" maxWidth="Infinity" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="Generate PDF" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
          </children>

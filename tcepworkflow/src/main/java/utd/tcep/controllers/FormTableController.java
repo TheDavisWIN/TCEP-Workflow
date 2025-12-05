@@ -33,7 +33,7 @@ public class FormTableController {
     @FXML private TableColumn<TCEPForm, LocalDate> dateStartedCol;
     @FXML private TableColumn<TCEPForm, String> schoolNameColumn;
     @FXML private TableColumn<TCEPForm, String> statusCol;
-    @FXML private Label dbStatus;   // "DB: not tested yet"
+    @FXML private Label dbStatus;
     @FXML private TextField searchField;
 
     private ObservableList<TCEPForm> masterData = FXCollections.observableArrayList();
@@ -108,10 +108,25 @@ public class FormTableController {
     // Written by Jeffrey Chou (jxc033200)
     @FXML
     private void onRefreshClicked() {
+        refreshTable();
+    }
+    
+    // Refreshes the table by reloading data from database
+    // Written by Jeffrey Chou (jxc033200)
+    public void refreshTable() {
         try {
             formTableObject.loadForms();
+            masterData.clear();
+            masterData.addAll(formTableObject.rows);
+            
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ✅ loaded " + formTableObject.rows.size() + " form(s)");
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            if (dbStatus != null) {
+                dbStatus.setText("DB: ❌ " + e.getMessage());
+            }
         }
     }
 

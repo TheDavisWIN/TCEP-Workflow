@@ -17,7 +17,7 @@ public class TCEPForm {
         Other
     }
 
-    public final int formID;
+    public int formID;
     public TCEPStatusHistory tcepStatusHistory;
     public LocalDate requestDate;
     public Term term;
@@ -35,6 +35,7 @@ public class TCEPForm {
     private SimpleObjectProperty<LocalDate> startedDate;
     private SimpleStringProperty schoolName;
     private SimpleStringProperty status;
+    private SimpleStringProperty statusReason;  // Reason for denial or send back
 
     // Constructor
     // Written by Ryan Pham (rkp200003)
@@ -55,39 +56,45 @@ public class TCEPForm {
      * and Ryan Pham (rkp200003); changed to use JavaFX properties and added Property getters
      */
     // --- getters (required by TableView) ---
-    public int getId()                  { return formID; }
-    public String getStudentName()      { return studentName.get(); }
-    public String getUtdId()            { return utdId.get(); }
-    public String getNetId()            { return netId.get(); }
-    public LocalDate getStartedDate()   { return startedDate.get(); }
-    public String getSchoolName()       { return schoolName.get(); }
-    public String getStatus()           { return status.get(); }
-    public String getDegReq()           { return degreeRequirement; }
-    public String getCoreDes()          { return coreDesignation; }
-    public int getIncomingID()          { return incomingCourseID; }
-    public int getEquivalentID()        { return equivalentCourseID; }
-    public int getInstitutionID()       { return institutionID; }
+    public int getId()                                              { return formID; }
+    public String getStudentName()                                  { return studentName.get(); }
+    public String getUtdId()                                        { return utdId.get(); }
+    public String getNetId()                                        { return netId.get(); }
+    public LocalDate getStartedDate()                               { return startedDate.get(); }
+    public String getSchoolName()                                   { return schoolName.get(); }
+    public String getStatus()                                       { return status.get(); }
+    public String getStatusReason()                                 { return statusReason.get(); }
+    public String getDegReq()                                       { return degreeRequirement; }
+    public String getCoreDes()                                      { return coreDesignation; }
+    public int getIncomingID()                                      { return incomingCourseID; }
+    public int getEquivalentID()                                    { return equivalentCourseID; }
+    public int getInstitutionID()                                   { return institutionID; }
 
     // --- property getters ---
-    public SimpleStringProperty getStudentNameProperty()      { return studentName; }
-    public SimpleStringProperty getUtdIdProperty()            { return utdId; }
-    public SimpleStringProperty getNetIdProperty()            { return netId; }
-    public SimpleObjectProperty<LocalDate> getStartedDateProperty()   { return startedDate; }
-    public SimpleStringProperty getSchoolNameProperty()       { return schoolName; }
-    public SimpleStringProperty getStatusProperty()           { return status; }
+    public SimpleStringProperty getStudentNameProperty()            { return studentName; }
+    public SimpleStringProperty getUtdIdProperty()                  { return utdId; }
+    public SimpleStringProperty getNetIdProperty()                  { return netId; }
+    public SimpleObjectProperty<LocalDate> getStartedDateProperty() { return startedDate; }
+    public SimpleStringProperty getSchoolNameProperty()             { return schoolName; }
+    public SimpleStringProperty getStatusProperty()                 { return status; }
+    public SimpleStringProperty getStatusReasonProperty()           { return statusReason; }
 
     // --- setters (used by controller when mapping ResultSet) ---
-    public void setStudentName(String studentName)         { this.studentName.set(studentName); }
-    public void setUtdId(String utdId)                     { this.utdId.set(utdId); }
-    public void setNetId(String netId)                     { this.netId.set(netId); }
-    public void setStartedDate(LocalDate startedDate)      { this.startedDate.set(startedDate); }
-    public void setSchoolName(String schoolName)           { this.schoolName.set(schoolName); }
-    public void setStatus(String status)                   { this.status.set(status); }
+    public void setStudentName(String studentName)                  { this.studentName.set(studentName); }
+    public void setUtdId(String utdId)                              { this.utdId.set(utdId); }
+    public void setNetId(String netId)                              { this.netId.set(netId); }
+    public void setStartedDate(LocalDate startedDate)               { this.startedDate.set(startedDate); }
+    public void setSchoolName(String schoolName)                    { this.schoolName.set(schoolName); }
+    public void setStatus(String status)                            { this.status.set(status); }
+    public void setStatusReason(String statusReason)                { this.statusReason.set(statusReason); }
 
-    public void setDegReq(String degreeRequirement)        { this.degreeRequirement = degreeRequirement; }
-    public void setCoreDes(String coreDesignation)         { this.coreDesignation = coreDesignation; }
-    public void setIncomingID(int incomingCourseID)        { this.incomingCourseID = incomingCourseID; }
-    public void setEquivalentID(int equivalentCourseID)    { this.equivalentCourseID = equivalentCourseID; }
-    public void setInstitutionID(int institutionID)        { this.institutionID = institutionID; }
+    // ---- other setters ----
+    public void setId(int formID)                                   { this.formID = formID; }
+    public void setDegReq(String degreeRequirement)                 { this.degreeRequirement = degreeRequirement; }
+    public void setCoreDes(String coreDesignation)                  { this.coreDesignation = coreDesignation; }
+    public void setIncomingID(int incomingCourseID)                 { this.incomingCourseID = incomingCourseID; }
+    public void setEquivalentID(int equivalentCourseID)             { this.equivalentCourseID = equivalentCourseID; }
+    public void setInstitutionID(int institutionID)                 { this.institutionID = institutionID; }
+    
 
 }

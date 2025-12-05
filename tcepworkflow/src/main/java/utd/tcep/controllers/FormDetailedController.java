@@ -6,12 +6,11 @@
 package utd.tcep.controllers;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.io.InputStream;
 import java.io.File;
+import java.util.Map;
+import java.util.HashMap;
 import java.awt.image.BufferedImage;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -40,21 +39,27 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import utd.tcep.data.TCEPForm;
+import utd.tcep.data.TCEPFormTable;
+import utd.tcep.data.TCEPUser;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
 
 public class FormDetailedController {
 
     private TCEPForm currentForm;
+    private Runnable onStatusChangeCallback;
+    private Runnable onNavigateToTableCallback;
+    private String advisorName;
     private String firstName;
     private String lastName;
     private String middleName;
     private boolean loadingForm = false;
 
-    @FXML private Label startedDateLabel;
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
     @FXML private TextField miField;
@@ -68,11 +73,19 @@ public class FormDetailedController {
     @FXML private TextField satisfiedRequirementField;
     @FXML private TextField coreDesignationField;
     
+    @FXML private Label formStartedByLabel;
+    @FXML private Label startedDateLabel;
+    
     @FXML private VBox formViewContainer;
+    @FXML private Button viewHistoryButton;
     @FXML private Button acceptButton;
     @FXML private Button denyButton;
     @FXML private Button sendBackButton;
     @FXML private Button generatePdfButton;
+    @FXML private Button editButton;
+    @FXML private Button saveButton;
+    @FXML private Button cancelButton;
+    @FXML private Button deleteButton;
     @FXML private AnchorPane overlayContainer;
     @FXML private ComboBox<String> sendBackReasonCombo;
     @FXML private ComboBox<String> sendBackRecipientCombo;
@@ -88,7 +101,7 @@ public class FormDetailedController {
     @FXML private Button confirmSendBackButton;
     @FXML private ImageView previewImageView;
     @FXML private Button exportButton;
-    @FXML private Button cancelButton;
+    @FXML private Button pdfCancelButton;
     @FXML private Button verifyEquivalencyButton;
     @FXML private TextArea verificationResultsArea;
     @FXML private Label statusIcon;
@@ -177,6 +190,30 @@ public class FormDetailedController {
             String templatePath = "Blank TCEP.pdf";
             showPDFPreview(templatePath);
         });
+        editButton.setOnAction(event -> handleEdit());
+        saveButton.setOnAction(event -> {
+            try {
+                handleSave();
+            } catch (SQLException e) {
+                System.err.println("Error saving form: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+        cancelButton.setOnAction(event -> handleCancel());
+        deleteButton.setOnAction(event -> {
+            try {
+                handleDelete();
+            } catch (SQLException e) {
+                System.err.println("Error deleting form: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+        
+        // Initialize button visibility - start with edit mode buttons hidden
+        updateButtonVisibility();
+        
+        // Disable all form fields by default until Edit mode is enabled
+        setFieldsEditable(false);
     }
     // Show form's change history
     @FXML
@@ -388,6 +425,30 @@ public class FormDetailedController {
         }
     }
 
+    // Set callback to refresh table when status changes
+    // Written by Davis Huynh (dxh170005)
+    public void setOnStatusChangeCallback(Runnable callback) {
+        this.onStatusChangeCallback = callback;
+    }
+
+    // Set callback to navigate to table view
+    // Written by Davis Huynh (dxh170005)
+    public void setOnNavigateToTableCallback(Runnable callback) {
+        this.onNavigateToTableCallback = callback;
+    }
+
+    /**
+     * Reset edit mode when navigating away
+     * Written by Davis Huynh (dxh170005)
+     */
+    public void resetEditMode() {
+        if (isEditMode) {
+            isEditMode = false;
+            setFieldsEditable(false);
+            updateButtonVisibility();
+        }
+    }
+
     @FXML
     private void handleAccept() throws IOException {
         // load approval overlay instead of using alerts/popups
@@ -411,11 +472,41 @@ public class FormDetailedController {
         String reason = approvalReasonCombo == null ? null : approvalReasonCombo.getValue();
         if ("Other".equals(reason) && approvalReasonOtherField != null) {
             reason = approvalReasonOtherField.getText();
+            // Validate that Other text field is not empty
+            if (reason == null || reason.trim().isEmpty()) {
+                System.err.println("Please provide a reason in the text field when 'Other' is selected.");
+                return;
+            }
         }
         String recipient = approvalRecipientCombo == null ? null : approvalRecipientCombo.getValue();
-        System.out.println("Approval confirmed. Reason: " + reason + ", Recipient: " + recipient);
+        
+        // Save approval to database
+        if (currentForm != null && currentForm.getId() > 0) {
+            try {
+                // Get or create "Approved" status (CategoryID 2 = Approved)
+                int approvedStatusId = TCEPDatabaseService.getOrCreateStatusId("Approved", 2);
+                
+                String formattedReason = String.format("Approved%s%s", 
+                    reason != null && !reason.trim().isEmpty() ? ": " + reason : "",
+                    recipient != null ? " (Recipient: " + recipient + ")" : "");
+                
+                TCEPDatabaseService.addStatusHistory(currentForm.getId(), approvedStatusId, 
+                    formattedReason, null);
+                TCEPDatabaseService.updateFormStatus(currentForm.getId(), approvedStatusId);
+                currentForm.setStatusReason(reason);
+                currentForm.setStatus(String.valueOf(approvedStatusId));
+                System.out.println("Approval confirmed and saved. Reason: " + reason + ", Recipient: " + recipient);
+                
+                // Refresh table to reflect status change
+                if (onStatusChangeCallback != null) {
+                    onStatusChangeCallback.run();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.err.println("Failed to save approval: " + e.getMessage());
+            }
+        }
 
-        // TODO: persist approval action or update model here
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formapprovalview.fxml"));
 
         // Use this controller for overlay callbacks (so overlay can call closeOverlay())
@@ -432,11 +523,37 @@ public class FormDetailedController {
         String reason = denialReasonCombo == null ? null : denialReasonCombo.getValue();
         if ("Other".equals(reason) && denialReasonOtherField != null) {
             reason = denialReasonOtherField.getText();
+            // Validate that Other text field is not empty
+            if (reason == null || reason.trim().isEmpty()) {
+                System.err.println("Please provide a reason in the text field when 'Other' is selected.");
+                return;
+            }
         }
         String recipient = denialRecipientCombo == null ? null : denialRecipientCombo.getValue();
         System.out.println("Denial confirmed. Reason: " + reason + ", Recipient: " + recipient);
 
-        // TODO: persist denial action or update model here
+        // Save denial reason to database
+        if (currentForm != null && currentForm.getId() > 0 && reason != null && !reason.trim().isEmpty()) {
+            try {
+                // Get or create "Denied" status (CategoryID 3 = Denied)
+                int deniedStatusId = TCEPDatabaseService.getOrCreateStatusId("Denied", 3);
+                TCEPDatabaseService.addStatusHistory(currentForm.getId(), deniedStatusId, 
+                    "Denied: " + reason + " (Recipient: " + recipient + ")", null);
+                TCEPDatabaseService.updateFormStatus(currentForm.getId(), deniedStatusId);
+                currentForm.setStatusReason(reason);
+                currentForm.setStatus(String.valueOf(deniedStatusId));
+                System.out.println("Denial reason saved to database");
+                
+                // Refresh table to reflect status change
+                if (onStatusChangeCallback != null) {
+                    onStatusChangeCallback.run();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.err.println("Failed to save denial reason: " + e.getMessage());
+            }
+        }
+
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdenialview.fxml"));
 
         // Use this controller for overlay callbacks (so overlay can call closeOverlay())
@@ -448,16 +565,42 @@ public class FormDetailedController {
 
     // Changes made to send back action
     // Written by Nicolas Hartono (nxh210004)
+    // Updated by Davis Huynh (dxh170005) to save reason to database
     @FXML
     public void confirmSendBack() throws IOException {
         String reason = sendBackReasonCombo == null ? null : sendBackReasonCombo.getValue();
         if ("Other".equals(reason) && sendBackReasonOtherField != null) {
             reason = sendBackReasonOtherField.getText();
+            if (reason == null || reason.trim().isEmpty()) {
+                System.err.println("Please provide a reason in the text field when 'Other' is selected.");
+                return;
+            }
         }
         String recipient = sendBackRecipientCombo == null ? null : sendBackRecipientCombo.getValue();
         System.out.println("Send back confirmed. Reason: " + reason + ", Recipient: " + recipient);
 
-        // TODO: perform any DB updates or messaging here using reason/recipient
+        // Save send back reason to database
+        if (currentForm != null && currentForm.getId() > 0 && reason != null && !reason.trim().isEmpty()) {
+            try {
+                // Get or create "Sent Back" status (CategoryID 4 = Sent Back)
+                int sentBackStatusId = TCEPDatabaseService.getOrCreateStatusId("Sent Back", 4);
+                TCEPDatabaseService.addStatusHistory(currentForm.getId(), sentBackStatusId, 
+                    "Sent Back: " + reason + " (Recipient: " + recipient + ")", null);
+                TCEPDatabaseService.updateFormStatus(currentForm.getId(), sentBackStatusId);
+                currentForm.setStatusReason(reason);
+                currentForm.setStatus(String.valueOf(sentBackStatusId));
+                System.out.println("Send back reason saved to database");
+                
+                // Refresh table to reflect status change
+                if (onStatusChangeCallback != null) {
+                    onStatusChangeCallback.run();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.err.println("Failed to save send back reason: " + e.getMessage());
+            }
+        }
+
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formsendbackview.fxml"));
 
         // Use this controller for overlay callbacks (so overlay can call closeOverlay())
@@ -495,7 +638,16 @@ public class FormDetailedController {
             previewController.getExportButton().setOnAction(e -> {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Save PDF");
-                fileChooser.setInitialFileName("TCEP_Form.pdf");
+                
+                String firstName = firstNameField.getText().trim().replaceAll("[^a-zA-Z0-9]", "");
+                String lastName = lastNameField.getText().trim().replaceAll("[^a-zA-Z0-9]", "");
+                String courseNum = equivalentCourseField.getText().trim().replaceAll("[^a-zA-Z0-9]", "");
+                String filename = String.format("%s-%s-TCEP-%s.pdf", 
+                    firstName.isEmpty() ? "Student" : firstName,
+                    lastName.isEmpty() ? "Name" : lastName,
+                    courseNum.isEmpty() ? "Course" : courseNum);
+                
+                fileChooser.setInitialFileName(filename);
                 File initialDir = new File(System.getProperty("user.dir") + "/tcepworkflow/TCEP Forms");
                 if (initialDir.exists()) {
                     fileChooser.setInitialDirectory(initialDir);
@@ -556,6 +708,28 @@ public class FormDetailedController {
             fillField(acroForm, "Location", sourceInstitutionLocationField.getText());
             fillField(acroForm, "Transfer as", equivalentCourseField.getText());
             fillField(acroForm, "andor to satisfy", satisfiedRequirementField.getText());
+            fillField(acroForm, "Text9", currentForm != null ? currentForm.getStatusReason() : "");
+            
+            // Add advisor name to PDF
+            if (advisorName != null && !advisorName.isEmpty()) {
+                fillField(acroForm, "By", advisorName);
+            }
+            
+            // Check ECS field (marked as BBS in the PDF)
+            fillField(acroForm, "BBS", "X");
+            
+            // Check approval/denial checkboxes based on status
+            if (currentForm != null && currentForm.getStatus() != null) {
+                String status = currentForm.getStatus();
+                // Status 4 = Approved, check "ASSOCIATE DEAN RESPONSE"
+                if ("4".equals(status)) {
+                    fillField(acroForm, "ASSOCIATE DEAN RESPONSE", "X");
+                }
+                // Status 2 = Denied, check "undefined_2"
+                else if ("2".equals(status)) {
+                    fillField(acroForm, "undefined_2", "X");
+                }
+            }
 
             acroForm.flatten();
             return pdfDoc;
@@ -581,49 +755,54 @@ public class FormDetailedController {
         equivalentCourseField.setText("");
         satisfiedRequirementField.setText("");
         coreDesignationField.setText("");
+        
+        // Initialize currentForm for new form creation
+        if (currentForm == null || currentForm.getId() > 0) {
+            currentForm = new TCEPForm(0);
+        }
+        
+        // Set the current logged-in user as the starter
+        TCEPUser currentUser = TCEPUser.getCurrentUser();
+        if (currentUser != null && currentUser.getAdvisorName() != null) {
+            advisorName = currentUser.getAdvisorName();
+            if (formStartedByLabel != null) {
+                formStartedByLabel.setText("By: " + advisorName);
+            }
+        } else {
+            if (formStartedByLabel != null) {
+                formStartedByLabel.setText("By: Unknown");
+            }
+        }
+        
+        // Set current date
+        if (startedDateLabel != null) {
+            startedDateLabel.setText("Started: " + java.time.LocalDate.now().toString());
+        }
     }
 
     // Set currently managed form and fill all text fields in UI when set
     // Written by Ryan Pham (rkp200003)
     public void setForm(TCEPForm form) {
         loadingForm = true; // set loadingForm to true to prevent listeners from firing while populating fields
+
+        // Exit edit mode if currently in edit mode
+        if (isEditMode) {
+            isEditMode = false;
+            setFieldsEditable(false);
+            updateButtonVisibility();
+        }
+        
         currentForm = form;
 
         clearForm();
 
-        // Populate name fields by splitting full name
-        if (form.getStudentName() != null)
-        {
-            String[] nameSplit = form.getStudentName().split(" ");
-
-            for (int i = 0; i < nameSplit.length; i++)
-            {
-                if (i == 0)
-                {
-                    firstNameField.setText(nameSplit[i]);
-                    firstName = nameSplit[i];
-                }
-                else if (i == nameSplit.length - 1)
-                {
-                    lastNameField.setText(nameSplit[i]);
-                    lastName = nameSplit[i];
-                }
-                else
-                {
-                    miField.setText(nameSplit[i]);
-                    middleName = nameSplit[i];
-                }
-            }
+        try {
+            loadByID(form.getId());
+        } catch (SQLException e) {
+            System.err.println("Error loading form data: " + e.getMessage());
+            e.printStackTrace();
         }
         
-        if (form.getStartedDate() != null) {
-            startedDateLabel.setText("Started on: " + form.getStartedDate().toString());
-        } else {
-            startedDateLabel.setText("ERROR: No start date");
-        }
-        
-
-        loadByFormID(form.getId());
         loadingForm = false;
     }
 
@@ -632,43 +811,87 @@ public class FormDetailedController {
         return currentForm;
     }
 
-    // Load form data from database by ID (NetID or UTDID) and populate fields
+    // Load form data from database by ID (FormID) and populate fields
     // Written by Davis Huynh (dxh170005)
-    public void loadByFormID(int formId) {
-        String sql = "SELECT f.StudentID, s.Student_Name, f.Degree_Requirement, f.Core_Designation, "
-                + "f.Incoming_CourseID, ic.CourseName AS IncomingCourseName, ic.CourseNumber AS IncomingCourseNumber,"
-                + "f.Equivalent_CourseID, ec.CourseName AS EquivalentCourseName, "
-                + "f.InstitutionID, inst.Institution_Name AS InstitutionName "
-                + "FROM tcep_form f "
-                + "LEFT JOIN student s ON f.StudentID = s.StudentID "
-                + "LEFT JOIN incoming_course ic ON f.Incoming_CourseID = ic.Incoming_CourseID "
-                + "LEFT JOIN equivalent_course ec ON f.Equivalent_CourseID = ec.Equivalent_CourseID "
-                + "LEFT JOIN institution inst ON f.InstitutionID = inst.InstitutionID "
-                + "WHERE f.FormID = ?";
+    public void loadByID(int id) throws SQLException{
+        // System.out.println("loadByID called with id: " + id);
         
-        try {
-            Connection conn = TCEPDatabaseService.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, Integer.toString(formId));
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                System.out.println("Found matching record in database");
-                studentIdField.setText(rs.getString("NetID") != null ? rs.getString("NetID") :
-                    (rs.getString("UtdID") != null ? rs.getString("UtdID") : ""));
-                origCourseNumField.setText(rs.getString("IncomingCourseNumber") != null ? rs.getString("IncomingCourseNumber") : "");
-                origCourseTitleField.setText(rs.getString("IncomingCourseName") != null ? rs.getString("IncomingCourseName") : "");
-                sourceInstitutionNameField.setText(rs.getString("InstitutionName") != null ? rs.getString("InstitutionName") : "");
-                equivalentCourseField.setText(rs.getString("EquivalentCourseNumber") != null ? rs.getString("EquivalentCourseNumber") : "");
-                satisfiedRequirementField.setText(rs.getString("Degree_Requirement") != null ? rs.getString("Degree_Requirement") : "");
-                coreDesignationField.setText(rs.getString("Core_Designation") != null ? rs.getString("Core_Designation") : "");
-                // System.out.println("Fields populated successfully");
-            } else {
-                System.out.println("No matching record found for id: " + formId);
+        // Use database service to retrieve form data
+        Map<String, Object> formData = TCEPDatabaseService.getFormDataById(id);
+        
+        if (formData != null) {
+            System.out.println("Found matching record in database");
+            
+            if (currentForm == null) {
+                currentForm = new TCEPForm((Integer) formData.get("FormID"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+            System.out.println("DEBUG: Set currentForm.FormId = " + currentForm.getId());
+            
+            Object utdIdObj = formData.get("UtdID");
+            String netId = (String) formData.get("NetID");
+            studentIdField.setText(netId != null ? netId :
+                (utdIdObj != null ? String.valueOf(utdIdObj) : ""));
+            
+            // Populate name fields by splitting full name
+            String studentName = (String) formData.get("StudentName");
+            
+            if (studentName != null)
+            {
+                String[] nameSplit = studentName.split(" ");
+
+                for (int i = 0; i < nameSplit.length; i++)
+                {
+                    if (i == 0)
+                    {
+                        firstNameField.setText(nameSplit[i]);
+                        firstName = nameSplit[i];
+                    }
+                    else if (i == nameSplit.length - 1)
+                    {
+                        lastNameField.setText(nameSplit[i]);
+                        lastName = nameSplit[i];
+                    }
+                    else
+                    {
+                        miField.setText(nameSplit[i]);
+                        middleName = nameSplit[i];
+                    }
+                }
+            }
+            
+            origCourseNumField.setText(formData.get("IncomingCourseNumber") != null ? 
+                (String) formData.get("IncomingCourseNumber") : "");
+            origCourseTitleField.setText(formData.get("IncomingCourseName") != null ? 
+                (String) formData.get("IncomingCourseName") : "");
+            sourceInstitutionNameField.setText(formData.get("InstitutionName") != null ? 
+                (String) formData.get("InstitutionName") : "");
+            equivalentCourseField.setText(formData.get("EquivalentCourseNumber") != null ? 
+                (String) formData.get("EquivalentCourseNumber") : "");
+            satisfiedRequirementField.setText(formData.get("DegreeRequirement") != null ? 
+                (String) formData.get("DegreeRequirement") : "");
+            coreDesignationField.setText(formData.get("CoreDesignation") != null ? 
+                (String) formData.get("CoreDesignation") : "");
+            
+            // Set advisor name in the label
+            advisorName = (String) formData.get("StartAdvisorName");
+            if (formStartedByLabel != null) {
+                formStartedByLabel.setText("By: " + (advisorName != null ? advisorName : "Unknown"));
+            }
+            
+            // Set request date in the label
+            if (startedDateLabel != null) {
+                java.sql.Date requestDate = (java.sql.Date) formData.get("RequestDate");
+                if (requestDate != null) {
+                    startedDateLabel.setText("Started: " + requestDate.toString());
+                } else {
+                    startedDateLabel.setText("Started: Unknown");
+                }
+            }
+            
+            // System.out.println("Fields populated successfully");
+        } else {
+            System.out.println("No matching record found for id: " + id);
         }
     }
 
@@ -700,9 +923,31 @@ public class FormDetailedController {
             fillField(acroForm, "Location", sourceInstitutionLocationField.getText());
             fillField(acroForm, "Transfer as", equivalentCourseField.getText());
             fillField(acroForm, "andor to satisfy", satisfiedRequirementField.getText());
+            fillField(acroForm, "Text9", currentForm != null ? currentForm.getStatusReason() : "");
+            
+            // Add advisor name to PDF
+            if (advisorName != null && !advisorName.isEmpty()) {
+                fillField(acroForm, "By", advisorName);
+            }
+            
+            // Check ECS field (marked as BBS in the PDF)
+            fillField(acroForm, "BBS", "X");
+            
+            // Check approval/denial checkboxes based on status
+            if (currentForm != null && currentForm.getStatus() != null) {
+                String status = currentForm.getStatus();
+                // Status 4 = Approved, check "ASSOCIATE DEAN RESPONSE"
+                if ("4".equals(status)) {
+                    fillField(acroForm, "ASSOCIATE DEAN RESPONSE", "Yes");
+                }
+                // Status 3 = Denied, check "undefined_2"
+                else if ("3".equals(status)) {
+                    fillField(acroForm, "undefined_2", "Yes");
+                }
+            }
             // fillField(acroForm, "coreDesignation", coreDesignationField.getText());
 
-            // Optional: Make fields read-only
+            // Make fields read-only
             acroForm.flatten();
 
             pdfDoc.save(outputPath);
@@ -749,5 +994,214 @@ public class FormDetailedController {
 
         System.out.println(report);
     }
+
+    // Track original values for cancel functionality
+    private Map<String, String> originalValues = new HashMap<>();
+    private boolean isEditMode = false;
+
+    /**
+     * Update button visibility based on edit mode state
+     * Written by Davis Huynh (dxh170005)
+     */
+    private void updateButtonVisibility() {
+        if (isEditMode) {
+            editButton.setDisable(true);
+            saveButton.setVisible(true);
+            cancelButton.setVisible(true);
+            viewHistoryButton.setDisable(true);
+            generatePdfButton.setDisable(true);
+            deleteButton.setDisable(true);
+            acceptButton.setDisable(true);
+            denyButton.setDisable(true);
+            sendBackButton.setDisable(true);
+        } else {
+            editButton.setDisable(false);
+            saveButton.setVisible(false);
+            cancelButton.setVisible(false);
+            viewHistoryButton.setDisable(false);
+            generatePdfButton.setDisable(false);
+            deleteButton.setDisable(false);
+            acceptButton.setDisable(false);
+            denyButton.setDisable(false);
+            sendBackButton.setDisable(false);
+        }
+    }
+
+    /**
+     * Enable edit mode - make all fields editable
+     * Written by Davis Huynh (dxh170005)
+     */
+    @FXML
+    private void handleEdit() {
+        isEditMode = true;
+        
+        originalValues.clear();
+        originalValues.put("firstName", firstNameField.getText());
+        originalValues.put("lastName", lastNameField.getText());
+        originalValues.put("mi", miField.getText());
+        originalValues.put("studentId", studentIdField.getText());
+        originalValues.put("origCourseNum", origCourseNumField.getText());
+        originalValues.put("origCourseTitle", origCourseTitleField.getText());
+        originalValues.put("origCreditHours", origCreditHoursField.getText());
+        originalValues.put("sourceInstitutionName", sourceInstitutionNameField.getText());
+        originalValues.put("sourceInstitutionLocation", sourceInstitutionLocationField.getText());
+        originalValues.put("equivalentCourse", equivalentCourseField.getText());
+        originalValues.put("satisfiedRequirement", satisfiedRequirementField.getText());
+        originalValues.put("coreDesignation", coreDesignationField.getText());
+        
+        setFieldsEditable(true);
+        updateButtonVisibility();
+        
+        System.out.println("Edit mode enabled");
+    }
+
+    /**
+     * Save changes to the form
+     * Written by Davis Huynh (dxh170005)
+     */
+    @FXML
+    private void handleSave() throws SQLException {
+        if (!isEditMode) return;
+        
+        System.out.println("DEBUG: currentForm=" + currentForm);
+        System.out.println("DEBUG: currentForm.getId()=" + (currentForm != null ? currentForm.getId() : "null"));
+        
+        // Validate required fields
+        if (studentIdField.getText().trim().isEmpty()) {
+            System.err.println("Student ID is required");
+            return;
+        }
+        if (origCourseNumField.getText().trim().isEmpty()) {
+            System.err.println("Course number is required");
+            return;
+        }
+        
+        // Build form data map
+        Map<String, Object> formData = new HashMap<>();
+        
+        String fullName = firstNameField.getText().trim() + " " + lastNameField.getText().trim();
+        formData.put("studentName", fullName);
+        formData.put("netId", studentIdField.getText().trim());
+        formData.put("incomingCourseName", origCourseTitleField.getText().trim());
+        formData.put("incomingCourseNumber", origCourseNumField.getText().trim());
+        formData.put("institutionName", sourceInstitutionNameField.getText().trim());
+        formData.put("institutionLocation", sourceInstitutionLocationField.getText().trim());
+        formData.put("equivalentCourseNumber", equivalentCourseField.getText().trim());
+        formData.put("degreeRequirement", satisfiedRequirementField.getText().trim());
+        formData.put("coreDesignation", coreDesignationField.getText().trim());
+        
+        if (currentForm != null && currentForm.getId() > 0) {
+            TCEPDatabaseService.updateForm(currentForm.getId(), formData);
+            System.out.println("Form updated successfully");
+        } else if (currentForm != null && currentForm.getId() == 0) {
+            System.out.println("Creating new form...");
+            
+            formData.put("requestDate", new java.sql.Date(System.currentTimeMillis()));
+            formData.put("term", "Fall"); // TODO: Get from UI or default
+            formData.put("year", java.time.Year.now().getValue());
+            
+            // Set the current logged-in advisor as the form starter
+            TCEPUser currentUser = TCEPUser.getCurrentUser();
+            if (currentUser != null && currentUser.getAdvisorId() != null) {
+                formData.put("advisorId", currentUser.getAdvisorId());
+                System.out.println("Setting StartAdvisorID to " + currentUser.getAdvisorId());
+            }
+            
+            int newFormId = TCEPDatabaseService.createForm(formData);
+            currentForm.setId(newFormId);
+            System.out.println("Form created successfully with ID=" + newFormId);
+        } else {
+            System.err.println("ERROR: Cannot save - currentForm is null or has invalid ID");
+            return;
+        }
+        
+        isEditMode = false;
+        setFieldsEditable(false);
+        updateButtonVisibility();
+        if (onStatusChangeCallback != null) {
+            onStatusChangeCallback.run();
+        }
+    }
+
+    /**
+     * Cancel edit mode and restore original values
+     * Written by Davis Huynh (dxh170005)
+     */
+    @FXML
+    private void handleCancel() {
+        if (!isEditMode) return;
+        boolean isNewForm = (currentForm != null && currentForm.getId() == 0);
+
+        firstNameField.setText(originalValues.get("firstName"));
+        lastNameField.setText(originalValues.get("lastName"));
+        miField.setText(originalValues.get("mi"));
+        studentIdField.setText(originalValues.get("studentId"));
+        origCourseNumField.setText(originalValues.get("origCourseNum"));
+        origCourseTitleField.setText(originalValues.get("origCourseTitle"));
+        origCreditHoursField.setText(originalValues.get("origCreditHours"));
+        sourceInstitutionNameField.setText(originalValues.get("sourceInstitutionName"));
+        sourceInstitutionLocationField.setText(originalValues.get("sourceInstitutionLocation"));
+        equivalentCourseField.setText(originalValues.get("equivalentCourse"));
+        satisfiedRequirementField.setText(originalValues.get("satisfiedRequirement"));
+        coreDesignationField.setText(originalValues.get("coreDesignation"));
+        
+        isEditMode = false;
+        setFieldsEditable(false);
+        updateButtonVisibility();
+        
+        System.out.println("Edit mode cancelled");
+        
+        if (isNewForm && onNavigateToTableCallback != null) {
+            onNavigateToTableCallback.run();
+        }
+    }
+
+    /**
+     * Handle delete button click
+     * Written by Davis Huynh (dxh170005)
+     */
+    private void handleDelete() throws SQLException {
+        if (currentForm == null || currentForm.getId() <= 0) {
+            System.err.println("ERROR: Cannot delete - no form loaded or invalid FormID");
+            return;
+        }
+        
+        javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Delete Form");
+        confirmAlert.setHeaderText("Are you sure you want to delete this form?");
+        confirmAlert.setContentText("Form ID: " + currentForm.getId() + "\nThis action cannot be undone.");
+        
+        java.util.Optional<javafx.scene.control.ButtonType> result = confirmAlert.showAndWait();
+        if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
+            TCEPDatabaseService.deleteForm(currentForm.getId());
+            if (onStatusChangeCallback != null) {
+                onStatusChangeCallback.run();
+            }
+            System.out.println("Form deleted successfully");
+            if (onNavigateToTableCallback != null) {
+                onNavigateToTableCallback.run();
+            }
+        }
+    }
+
+    /**
+     * Set all form fields editable or read-only
+     * Written by Davis Huynh (dxh170005)
+     */
+    private void setFieldsEditable(boolean editable) {
+        firstNameField.setEditable(editable);
+        lastNameField.setEditable(editable);
+        miField.setEditable(editable);
+        studentIdField.setEditable(editable);
+        origCourseNumField.setEditable(editable);
+        origCourseTitleField.setEditable(editable);
+        origCreditHoursField.setEditable(editable);
+        sourceInstitutionNameField.setEditable(editable);
+        sourceInstitutionLocationField.setEditable(editable);
+        equivalentCourseField.setEditable(editable);
+        satisfiedRequirementField.setEditable(editable);
+        coreDesignationField.setEditable(editable);
+    }
 }
+
  

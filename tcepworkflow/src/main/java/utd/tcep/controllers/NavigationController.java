@@ -6,12 +6,17 @@
 package utd.tcep.controllers;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import utd.tcep.data.TCEPForm;
+import utd.tcep.data.TCEPUser;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
@@ -32,6 +37,10 @@ public class NavigationController {
     private Node loginView;
     @FXML
     private VBox navigationBar;
+    @FXML
+    private Label loggedInAdvisorLabel;
+    @FXML
+    private Label loggedInAdvisorIdLabel;
     private FormDetailedController formDetailedController;
     private FormTableController formTableController;
     private LoginController loginController;
@@ -57,6 +66,16 @@ public class NavigationController {
         formTableController = formTableViewLoader.getController();
         loginController = loginViewLoader.getController();
         loginController.setNavigationController(this);
+        
+        // Set callback to refresh table when status changes in detailed view
+        formDetailedController.setOnStatusChangeCallback(() -> {
+            formTableController.refreshTable();
+        });
+        
+        // Set callback to navigate to table view after deletion
+        formDetailedController.setOnNavigateToTableCallback(() -> {
+            swapView(View.Table);
+        });
 
         swapView(View.Login);
 
@@ -98,6 +117,17 @@ public class NavigationController {
     // Called when login is successful
     // Davis Huynh (dxh170005)
     public void onLoginSuccess() {
+        // Update advisor info from current user session
+        TCEPUser currentUser = TCEPUser.getCurrentUser();
+        if (currentUser != null) {
+            if (loggedInAdvisorLabel != null) {
+                loggedInAdvisorLabel.setText(currentUser.getAdvisorName() != null ? currentUser.getAdvisorName() : "Unknown");
+            }
+            if (loggedInAdvisorIdLabel != null) {
+                loggedInAdvisorIdLabel.setText("ID: " + currentUser.getAdvisorId());
+            }
+        }
+        
         navigationBar.setVisible(true);
         swapView(View.Table);
     }
@@ -114,6 +144,11 @@ public class NavigationController {
     // Ryan Pham (rkp200003)
     // Davis Huynh (dxh170005) (added Login view)
     public void swapView(View view) {
+        // Reset edit mode when navigating away from detailed view
+        if (view == View.Table || view == View.Login) {
+            formDetailedController.resetEditMode();
+        }
+        
         loginView.setVisible(false);
         formDetailedView.setVisible(false);
         formTableView.setVisible(false);
