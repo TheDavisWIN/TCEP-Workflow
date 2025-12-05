@@ -71,6 +71,8 @@ public class NavigationController {
         formDetailedController.setNavigationController(this);
         tableController = formTableController;
 
+        // form history controller code
+
         FXMLLoader formHistoryViewLoader = new FXMLLoader(
         TCEPWorkflowApp.class.getResource("/utd/tcep/formhistoryview.fxml")
         );
@@ -80,6 +82,8 @@ public class NavigationController {
         appGridPane.getChildren().add(formHistoryView);
         GridPane.setColumnIndex(formHistoryView, 1);
 
+
+        
         swapView(View.Login);
 
         formTableController.formTable.addEventHandler(NavigationRequestEvent.REQUEST, event -> {
