@@ -350,7 +350,7 @@ public class FormDetailedController {
         overlayContainerBackground.setVisible(false);
     }
 
-//Handle verification of course equivalency by checkin database for institution, courses
+    //Handle verification of course equivalency by checkin database for institution, courses
     //Written by Ayden Benel (acb210000)
     @FXML
     private void handleVerifyEquivalency() throws IOException {
