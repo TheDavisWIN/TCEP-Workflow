@@ -174,15 +174,14 @@ public static String checkIncomingCourse(String institutionName, String courseNu
 //mapping exists inside course_equivalency but since incoming_course already has its equivalnet UTD course in it its not needed, I originally added this to test how it would work but its not needed right now, it could be implemented later
 public static String checkCourseEquivalency(String institutionName, String courseNumber, String utdCourseNumber) {
 
-    String sql = """
-        SELECT ce.Incoming_CourseID, ce.Equivalent_CourseID
-        FROM course_equivalency ce
-        JOIN incoming_course ic ON ic.Incoming_CourseID = ce.Incoming_CourseID
-        JOIN equivalent_course ec ON ec.Equivalent_CourseID = ce.Equivalent_CourseID
-        WHERE ic.Institution_Name = ? 
-          AND ic.CourseNumber = ? 
-          AND ec.UTDCourseNumber = ?
-    """;
+    String sql =
+        "SELECT ce.Incoming_CourseID, ce.Equivalent_CourseID" +
+        " FROM course_equivalency ce" +
+        " JOIN incoming_course ic ON ic.Incoming_CourseID = ce.Incoming_CourseID" +
+        " JOIN equivalent_course ec ON ec.Equivalent_CourseID = ce.Equivalent_CourseID" +
+        " WHERE ic.Institution_Name = ? " +
+        "   AND ic.CourseNumber = ? " +
+        "   AND ec.UTDCourseNumber = ?;";
 
     try (Connection conn = getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {
