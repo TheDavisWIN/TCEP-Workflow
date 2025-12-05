@@ -1,6 +1,6 @@
 -- SQL Script to alter TCEP_Form table for create/edit functionality
 -- This allows storing form data directly in tcep_form without requiring all foreign key references
--- Written by GitHub Copilot
+-- Written by Davis Huynh
 -- Updated to account for StartAdvisorID and CurrentAdvisorID columns added by advisortracking.sql
 
 USE tcep;
