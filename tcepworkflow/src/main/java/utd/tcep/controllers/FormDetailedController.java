@@ -844,6 +844,7 @@ public class FormDetailedController {
                 currentForm = new TCEPForm((Integer) formData.get("FormID"));
             }
 
+            currentForm.setId(id);
             System.out.println("DEBUG: Set currentForm.FormId = " + currentForm.getId());
             
             Object utdIdObj = formData.get("UtdID");
