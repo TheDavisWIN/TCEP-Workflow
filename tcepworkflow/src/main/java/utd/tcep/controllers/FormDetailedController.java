@@ -988,6 +988,7 @@ public class FormDetailedController {
             currentForm.setStudentName(firstName + " " + lastName);
         }
     }
+    
     // Helper method to fill a field in the PDF form
     // Written by Davis Huynh (dxh170005)
     private void fillField(PDAcroForm acroForm, String fieldName, String value) {
@@ -1008,7 +1009,6 @@ public class FormDetailedController {
     // Written by Ryan Pham (rkp200003)
     public void onNavigatedAway() {
         closeOverlay();
-        setForm(null);
     }
 
     @FXML
