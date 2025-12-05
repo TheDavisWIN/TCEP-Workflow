@@ -20,6 +20,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import utd.tcep.data.TCEPForm;
 import utd.tcep.data.TCEPFormTable;
+import utd.tcep.db.TCEPDatabaseService;
 import utd.tcep.events.NavigationRequestEvent;
 
 public class FormTableController {
@@ -130,10 +131,13 @@ public class FormTableController {
             });
         }
     }
-
+    
+    
     public void refreshMasterData() {
         masterData.clear();
         masterData.addAll(formTableObject.rows);
     }
+
+    
 }
  

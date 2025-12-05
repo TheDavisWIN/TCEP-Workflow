@@ -22,6 +22,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
@@ -88,6 +89,10 @@ public class FormDetailedController {
     @FXML private ImageView previewImageView;
     @FXML private Button exportButton;
     @FXML private Button cancelButton;
+    @FXML private Button verifyEquivalencyButton;
+    @FXML private TextArea verificationResultsArea;
+    @FXML private Label statusIcon;
+    @FXML private Label statusLabel;
 
     // Setup property listeners for fields in the form
     // Written by Ryan Pham (rkp200003)
@@ -138,6 +143,15 @@ public class FormDetailedController {
         coreDesignationField.textProperty().addListener((observable, oldValue, newValue) -> {
             
         });
+
+        verifyEquivalencyButton.setOnAction(event -> {
+            try {
+                handleVerifyEquivalency();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
         acceptButton.setOnAction(event -> {
             try {
                 handleAccept();
@@ -297,6 +311,81 @@ public class FormDetailedController {
     public void closeOverlay() {
         overlayContainer.getChildren().clear();
         overlayContainer.setVisible(false);
+    }
+
+    //Handle verification of course equivalency by checkin database for institution, courses
+    //Written by Ayden Benel (acb210000)
+    @FXML
+    private void handleVerifyEquivalency() throws IOException {
+        String institution = sourceInstitutionNameField.getText().trim();
+        String incomingCourse = origCourseNumField.getText().trim();
+        String utdCourse = equivalentCourseField.getText().trim();
+        
+        if (institution.isEmpty() || incomingCourse.isEmpty() || utdCourse.isEmpty()) {
+            showVerificationError("Please fill in all required fields:\n" +
+                                 "- Source Institution Name\n" +
+                                 "- Original Course Number\n" +
+                                 "- Equivalent Course (UTD)");
+            return;
+        }
+        
+        loadOverlay("/utd/tcep/formverificationview");
+        
+        String report = TCEPDatabaseService.verifyEquivalency(institution, incomingCourse, utdCourse);
+        
+        // Display results in the TextArea
+        if (verificationResultsArea != null) {
+            verificationResultsArea.setText(report);
+            
+            updateVerificationStatus(report);
+        }
+    }
+
+    private void updateVerificationStatus(String report) {
+        if (statusIcon == null || statusLabel == null) return;
+        
+        //this counts check marks and X marks since thats what expresses if it exists or not
+        long checkCount = report.chars().filter(ch -> ch == '✔').count();
+        long xCount = report.chars().filter(ch -> ch == '✘').count();
+        
+        if (xCount == 0 && checkCount == 3) {
+            //all good
+
+            statusIcon.setText("✔");
+            statusIcon.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 18px;");
+            statusLabel.setText("All verification checks passed! This equivalency exists in the database");
+            statusLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+        } else if (xCount > 0) {
+            //something failed
+            statusIcon.setText("✘");
+            statusIcon.setStyle("-fx-text-fill: #F44336; -fx-font-size: 18px;");
+            statusLabel.setText("Verification failed " + xCount + " check(s), It doesnt exist in the database");
+            statusLabel.setStyle("-fx-text-fill: #F44336; -fx-font-weight: bold;");
+            
+        } else {
+            //somehthing is making it not fail nor pass
+            statusIcon.setText("⚠");
+            statusIcon.setStyle("-fx-text-fill: #FF9800; -fx-font-size: 18px;");
+            statusLabel.setText("Verification complete with warnings, double check databse or spelling");
+            statusLabel.setStyle("-fx-text-fill: #FF9800; -fx-font-weight: bold;");
+        }
+    }
+
+    //error since all three fields gotta be inserted
+    private void showVerificationError(String message) throws IOException {
+        loadOverlay("/utd/tcep/formverificationview");
+        
+        if (verificationResultsArea != null) {
+            verificationResultsArea.setText("VERIFICATION ERROR\n\n" + 
+                                           message);
+        }
+        
+        if (statusIcon != null && statusLabel != null) {
+            statusIcon.setText("⚠");
+            statusIcon.setStyle("-fx-text-fill: #FF9800; -fx-font-size: 18px;");
+            statusLabel.setText("Missing required information");
+            statusLabel.setStyle("-fx-text-fill: #FF9800; -fx-font-weight: bold;");
+        }
     }
 
     @FXML
@@ -648,6 +737,17 @@ public class FormDetailedController {
         } else {
             System.err.println("Field not found in PDF form: " + fieldName);
         }
+    }
+
+    @FXML
+    private void testEquivalencyCheck() {
+        String report = TCEPDatabaseService.verifyEquivalency(
+            "University of North Texas",   // Institution name
+            "CSCE 1030",                    // Incoming course number
+            "CS 1336"                       // UTD equivalent course number
+        );
+
+        System.out.println(report);
     }
 }
  
