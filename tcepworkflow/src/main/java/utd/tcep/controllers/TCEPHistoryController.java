@@ -1,5 +1,9 @@
 package utd.tcep.controllers;
 
+// TCEP FormHistory controller, used to populate History table with data, linked with the database
+// Andrew Robertson (AMR220023)
+
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -52,13 +56,14 @@ public class TCEPHistoryController {
         });
     }
 
-    // Called from FormDetailedController to pass data
+    // Called from FormDetailedController to pass data, Andrew Robertson(AMR220023)
     public void setFormData(int formId, FormDetailedController parent) {
         this.currentFormId = formId;
         this.parentController = parent;
         loadHistory();
     }
-
+    
+    //loads history table when clicking view history button Andrew Robertson(AMR220023)
     private void loadHistory() {
         ObservableList<TCEPStatusHistory> historyList = FXCollections.observableArrayList();
 

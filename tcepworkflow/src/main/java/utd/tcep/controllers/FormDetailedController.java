@@ -661,6 +661,7 @@ public class FormDetailedController {
     // Changes made to approval action
     // Written by Nicolas Hartono (nxh210004)
     // and modified by Ryan Pham (rkp200003) to add confirmation feedback
+    // added save history when form has an action put on it, Andrew Robertson (AMR220023)
     @FXML
     public void confirmApproval() throws IOException {
         String reason = approvalReasonCombo == null ? null : approvalReasonCombo.getValue();
@@ -749,6 +750,7 @@ public class FormDetailedController {
     // Changes made to denial action
     // Written by Nicolas Hartono (nxh210004)
     // and modified by Ryan Pham (rkp200003) to add confirmation feedback
+    // added save history when form has an action put on it, Andrew Robertson (AMR220023)
     @FXML
     public void confirmDenial() throws IOException {
         String reason = denialReasonCombo == null ? null : denialReasonCombo.getValue();
@@ -845,6 +847,7 @@ public class FormDetailedController {
     // Written by Nicolas Hartono (nxh210004)
     // Updated by Davis Huynh (dxh170005) to save reason to database
     // and modified by Ryan Pham (rkp200003) to add confirmation feedback
+    // added save history when form has an action put on it, Andrew Robertson (AMR220023)
     @FXML
     public void confirmSendBack() throws IOException {
         String reason = sendBackReasonCombo == null ? null : sendBackReasonCombo.getValue();
