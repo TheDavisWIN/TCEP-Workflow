@@ -5,6 +5,7 @@
 package utd.tcep.controllers;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -48,7 +49,6 @@ import utd.tcep.data.TCEPFormTable;
 import utd.tcep.data.TCEPUser;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
-import javafx.scene.Node;
 
 public class FormDetailedController {
 
@@ -67,6 +67,7 @@ public class FormDetailedController {
     private FormTableController formTableController;
     private NavigationController navigationController;
     private boolean shouldNavigateToTableOnClose = false;
+    private Node currentHistoryView;
 
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
@@ -1621,21 +1622,17 @@ public class FormDetailedController {
         coreDesignationField.setEditable(editable);
     }
 
-    public void setNavigationController(NavigationController nav) {
-    this.navigationController = nav;
-    }
     public NavigationController getNavigationController() {
-    return navigationController;
-}
+        return navigationController;
+    }
 
-public Node getCurrentHistoryView() {
-    return currentHistoryView;
-}
+    public Node getCurrentHistoryView() {
+        return currentHistoryView;
+    }
 
-public void clearCurrentHistoryView() {
-    currentHistoryView = null;
-}
-
+    public void clearCurrentHistoryView() {
+        currentHistoryView = null;
+    }
 
 }
 

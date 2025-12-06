@@ -12,11 +12,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import utd.tcep.data.TCEPForm;
-import utd.tcep.data.TCEPFormTable;
-
 public class TCEPDatabaseService {
 
     // connection info for local XAMPP MySQL instance.

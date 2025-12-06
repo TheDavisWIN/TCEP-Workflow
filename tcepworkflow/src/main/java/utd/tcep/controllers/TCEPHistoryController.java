@@ -12,7 +12,6 @@ import javafx.scene.layout.GridPane;
 import utd.tcep.data.TCEPStatusHistory;
 import utd.tcep.db.TCEPDatabaseService;
 import javafx.scene.control.TableCell;
-import java.time.format.DateTimeFormatter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

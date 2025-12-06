@@ -6,16 +6,13 @@
 package utd.tcep.controllers;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import utd.tcep.data.TCEPForm;
 import utd.tcep.data.TCEPUser;
 import utd.tcep.events.NavigationRequestEvent;
 import utd.tcep.main.TCEPWorkflowApp;
