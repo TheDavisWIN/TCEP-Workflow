@@ -68,9 +68,9 @@
                               <Label fx:id="loggedInAdvisorIdLabel" style="-fx-font-size: 12px;" text="ID: 0000" />
                            </children>
                         </VBox>
-                        <Button alignment="CENTER" contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowFormTable" prefHeight="80.0" style="-fx-padding: 0;" text="Forms" userData="/tcep-workflow/src/main/resources/com/example/tcep.fxml" />
-                        <Button alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowBlankForm" prefHeight="80.0" style="-fx-padding: 0;" text="Start Empty Form" />
-                        <Button alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="90.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogout" prefHeight="80.0" style="-fx-padding: 0;" text="Logout" />
+                        <Button alignment="CENTER" contentDisplay="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowFormTable" prefHeight="80.0" style="-fx-alignment: CENTER; -fx-text-alignment: CENTER;" text="Forms" userData="/tcep-workflow/src/main/resources/com/example/tcep.fxml" />
+                        <Button alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowBlankForm" prefHeight="80.0" style="-fx-alignment: CENTER; -fx-text-alignment: CENTER;" text="Start Empty Form" />
+                        <Button alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="90.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogout" prefHeight="80.0" style="-fx-alignment: CENTER; -fx-text-alignment: CENTER;" text="Logout" />
                      </children>
                      <GridPane.margin>
                         <Insets />

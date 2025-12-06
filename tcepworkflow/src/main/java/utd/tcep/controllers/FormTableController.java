@@ -45,6 +45,18 @@ public class FormTableController {
         return formTableObject;
     }
 
+    // Current logged-in advisor ID for filtering forms
+    private Integer currentAdvisorId = null;
+    
+    /**
+     * Set the current advisor to filter forms
+     * @param advisorId The logged-in advisor's ID
+     */
+    public void setCurrentAdvisor(Integer advisorId) {
+        this.currentAdvisorId = advisorId;
+        System.out.println("FormTableController: Set current advisor ID = " + advisorId);
+    }
+    
     /**
      * Initializes the Form Table View after the FXML is loaded.
      * <p>
@@ -90,7 +102,7 @@ public class FormTableController {
 
         // 3. load data from DB
         try {
-            formTableObject.loadForms();
+            formTableObject.loadForms(currentAdvisorId);
             masterData.clear();
             masterData.addAll(formTableObject.rows);
 
@@ -114,9 +126,15 @@ public class FormTableController {
     
     // Refreshes the table by reloading data from database
     // Written by Jeffrey Chou (jxc033200)
+    // Modified by Nicolas Hartono (nxh210004) to filter by advisor
     public void refreshTable() {
         try {
-            formTableObject.loadForms();
+            if (currentAdvisorId != null) {
+                System.out.println("Loading forms for advisor ID: " + currentAdvisorId);
+            } else {
+                System.out.println("Loading all forms (no advisor filter)");
+            }
+            formTableObject.loadForms(currentAdvisorId);
             masterData.clear();
             masterData.addAll(formTableObject.rows);
             
@@ -152,6 +170,31 @@ public class FormTableController {
     public void refreshMasterData() {
         masterData.clear();
         masterData.addAll(formTableObject.rows);
+    }
+
+    // Remove a form from the UI table
+    // Written by Nicolas Hartono (nxh210004)
+    public void removeFormFromUI(TCEPForm form) {
+        if (form != null) {
+            System.out.println("removeFormFromUI called with form ID: " + form.getId());
+            System.out.println("masterData size before: " + masterData.size());
+            System.out.println("formTableObject.rows size before: " + formTableObject.rows.size());
+            
+            // Remove by ID matching since object references may differ
+            boolean removedFromMaster = masterData.removeIf(f -> f.getId() == form.getId());
+            boolean removedFromRows = formTableObject.rows.removeIf(f -> f.getId() == form.getId());
+            
+            System.out.println("Removed from masterData: " + removedFromMaster);
+            System.out.println("Removed from rows: " + removedFromRows);
+            System.out.println("masterData size after: " + masterData.size());
+            System.out.println("formTableObject.rows size after: " + formTableObject.rows.size());
+            
+            if (removedFromMaster || removedFromRows) {
+                System.out.println("Successfully removed form with ID " + form.getId() + " from UI table");
+            } else {
+                System.out.println("WARNING: Form with ID " + form.getId() + " was not found in table");
+            }
+        }
     }
 
     

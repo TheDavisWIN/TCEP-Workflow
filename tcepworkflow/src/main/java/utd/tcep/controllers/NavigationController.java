@@ -72,6 +72,10 @@ public class NavigationController {
         formDetailedController.setNavigationController(this);
     
         
+        // Set references in FormDetailedController
+        formDetailedController.setFormTableController(formTableController);
+        formDetailedController.setNavigationController(this);
+        
         // Set callback to refresh table when status changes in detailed view
         formDetailedController.setOnStatusChangeCallback(() -> {
             formTableController.refreshTable();
@@ -131,6 +135,12 @@ public class NavigationController {
             if (loggedInAdvisorIdLabel != null) {
                 loggedInAdvisorIdLabel.setText("ID: " + currentUser.getAdvisorId());
             }
+            // Set current user in FormDetailedController
+            formDetailedController.setCurrentUser(currentUser);
+            // Set current advisor in FormTableController to filter forms
+            formTableController.setCurrentAdvisor(currentUser.getAdvisorId());
+            // Refresh table to load forms for this advisor
+            formTableController.refreshTable();
         }
         
         navigationBar.setVisible(true);

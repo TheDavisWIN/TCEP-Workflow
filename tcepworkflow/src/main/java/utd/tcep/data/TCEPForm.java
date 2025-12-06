@@ -48,6 +48,7 @@ public class TCEPForm {
         this.startedDate = new SimpleObjectProperty<LocalDate>();
         this.schoolName = new SimpleStringProperty();
         this.status = new SimpleStringProperty();
+        this.statusReason = new SimpleStringProperty();
     }
 
     /**

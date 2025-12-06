@@ -5,6 +5,9 @@
 package utd.tcep.controllers;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.io.InputStream;
 import java.io.File;
@@ -15,7 +18,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import java.net.URL;
+import org.controlsfx.control.CheckComboBox;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.fxml.FXMLLoader;
@@ -57,8 +60,13 @@ public class FormDetailedController {
     private String lastName;
     private String middleName;
     private boolean loadingForm = false;
-    private NavigationController navigationController; // To switch views later
-    private Node currentHistoryView; // Track if we're showing history
+    private String currentStudentDepartment = null;
+    private final Map<String, Integer> recipientNameToId = new HashMap<>();
+    private Connection connection;
+    private TCEPUser currentUser;
+    private FormTableController formTableController;
+    private NavigationController navigationController;
+    private boolean shouldNavigateToTableOnClose = false;
 
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
@@ -93,17 +101,18 @@ public class FormDetailedController {
     @FXML private HBox overlayContainerBackground;
     @FXML private VBox overlayContainer;
     @FXML private ComboBox<String> sendBackReasonCombo;
-    @FXML private ComboBox<String> sendBackRecipientCombo;
+    @FXML private CheckComboBox<String> sendBackRecipientCombo;
     @FXML private ComboBox<String> approvalReasonCombo;
-    @FXML private ComboBox<String> approvalRecipientCombo;
+    @FXML private CheckComboBox<String> approvalRecipientCombo;
     @FXML private ComboBox<String> denialReasonCombo;
-    @FXML private ComboBox<String> denialRecipientCombo;
+    @FXML private CheckComboBox<String> denialRecipientCombo;
     @FXML private TextField approvalReasonOtherField;
     @FXML private TextField denialReasonOtherField;
     @FXML private TextField sendBackReasonOtherField;
     @FXML private Button confirmApprovalButton;
     @FXML private Button confirmDenialButton;
     @FXML private Button confirmSendBackButton;
+    @FXML private Button generatePdfFromFeedbackButton;
     @FXML private ImageView previewImageView;
     @FXML private Label statusIcon;
     @FXML private Label statusLabel;
@@ -254,6 +263,14 @@ public class FormDetailedController {
         // Clear any existing overlay
         overlayContainer.getChildren().clear();
 
+        // Ensure we have a DB connection for loading advisor lists
+        try {
+            connection = TCEPDatabaseService.getConnection();
+        } catch (SQLException e) {
+            // If DB not available, leave connection null and handle later
+            e.printStackTrace();
+        }
+
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource(fxmlPath + ".fxml"));
         // Use this controller for overlay callbacks (so overlay can call closeOverlay())
         loader.setController(this);
@@ -262,15 +279,42 @@ public class FormDetailedController {
         overlayContainer.getChildren().add(overlayRoot);
         overlayContainerBackground.setVisible(true);
 
+        // Use logged-in advisor ID to exclude from recipient list
+        Integer loggedInAdvisorId = (currentUser != null) ? currentUser.getAdvisorId() : null;
+        System.out.println("DEBUG loadOverlay: currentUser=" + currentUser + ", loggedInAdvisorId=" + loggedInAdvisorId);
+        
+        // Get student's department for the department label
+        String studentDeptName = null;
+        try {
+            if (currentForm != null && currentForm.getUtdId() != null && !currentForm.getUtdId().isEmpty()) {
+                String sql = "SELECT d.Department_Name FROM student s " +
+                           "JOIN department d ON s.DepartmentID = d.DepartmentID " +
+                           "WHERE s.UtdID = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, Integer.parseInt(currentForm.getUtdId()));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            studentDeptName = rs.getString("Department_Name");
+                        }
+                    }
+                }
+            }
+        } catch (NumberFormatException | SQLException e) {
+            // ignore parsing or SQL errors here; recipient lists will be built without exclusions
+            e.printStackTrace();
+        }
+
         // populate send-back combo boxes if they exist in the loaded FXML
         if (sendBackReasonCombo != null) {
             ObservableList<String> reasons = FXCollections.observableArrayList(
-                "Incomplete information",
-                "Missing transcript",
-                "Course mismatch",
+                "Incomplete information on the syllabus",
+                "Different Programming Language",
+                "Different Credit Hours",
                 "Other"
             );
             sendBackReasonCombo.setItems(reasons);
+
+            // Sets the first index as default
             if (!reasons.isEmpty()) sendBackReasonCombo.getSelectionModel().selectFirst();
         }
 
@@ -288,15 +332,35 @@ public class FormDetailedController {
             sendBackReasonOtherField.setManaged(show);
         }
 
+        // Populate the send-back recipient check combo from the Advisor table (exclude the logged-in advisor)
         if (sendBackRecipientCombo != null) {
-            ObservableList<String> recipients = FXCollections.observableArrayList(
-                "Dr. Crynes",
-                "Academic Advisor",
-                "Department Coordinator",
-                "Registrar"
-            );
-            sendBackRecipientCombo.setItems(recipients);
-            if (!recipients.isEmpty()) sendBackRecipientCombo.getSelectionModel().selectFirst();
+            ObservableList<String> recipients = FXCollections.observableArrayList();
+            // Now fetch advisors, excluding loggedInAdvisorId if known
+            String sqlAll = loggedInAdvisorId == null
+                ? "SELECT AdvisorID, Advisor_Name FROM Advisor"
+                : "SELECT AdvisorID, Advisor_Name FROM Advisor WHERE AdvisorID <> ?";
+
+            try (PreparedStatement stmt = connection.prepareStatement(sqlAll)) {
+                if (loggedInAdvisorId != null) {
+                    stmt.setInt(1, loggedInAdvisorId);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String name = rs.getString("Advisor_Name");
+                        recipients.add(name);
+                        recipientNameToId.put(name, rs.getInt("AdvisorID"));
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Add a single department label: prefer the student's department name, otherwise fall back to "CS Department"
+            String deptLabel = (studentDeptName != null && !studentDeptName.isEmpty()) ? studentDeptName : "CS Department";
+            currentStudentDepartment = (studentDeptName != null && !studentDeptName.isEmpty()) ? studentDeptName : null;
+            if (!recipients.contains(deptLabel)) recipients.add(deptLabel);
+
+            // populate the CheckComboBox items
+            sendBackRecipientCombo.getItems().setAll(recipients);
         }
 
         // populate approval combos if present
@@ -307,6 +371,8 @@ public class FormDetailedController {
                 "Other"
             );
             approvalReasonCombo.setItems(reasons);
+
+            // Sets the first index as default
             if (!reasons.isEmpty()) approvalReasonCombo.getSelectionModel().selectFirst();
         }
 
@@ -324,24 +390,47 @@ public class FormDetailedController {
             approvalReasonOtherField.setManaged(show);
         }
 
+        // Populate the approval recipient check combo if they exist in the loaded FXML
         if (approvalRecipientCombo != null) {
-            ObservableList<String> recipients = FXCollections.observableArrayList(
-                "Student",
-                "Registrar",
-                "CS Department"
-            );
-            approvalRecipientCombo.setItems(recipients);
-            if (!recipients.isEmpty()) approvalRecipientCombo.getSelectionModel().selectFirst();
+            ObservableList<String> recipients = FXCollections.observableArrayList();
+            // Now fetch advisors, excluding loggedInAdvisorId if known
+            String sqlAll = loggedInAdvisorId == null
+                ? "SELECT AdvisorID, Advisor_Name FROM Advisor"
+                : "SELECT AdvisorID, Advisor_Name FROM Advisor WHERE AdvisorID <> ?";
+
+            try (PreparedStatement stmt = connection.prepareStatement(sqlAll)) {
+                if (loggedInAdvisorId != null) {
+                    stmt.setInt(1, loggedInAdvisorId);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String name = rs.getString("Advisor_Name");
+                        recipients.add(name);
+                        recipientNameToId.put(name, rs.getInt("AdvisorID"));
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Add a single department label: prefer the student's department name, otherwise fall back to "CS Department"
+            String deptLabel = (studentDeptName != null && !studentDeptName.isEmpty()) ? studentDeptName : "CS Department";
+            if (!recipients.contains(deptLabel)) recipients.add(deptLabel);
+            // CheckComboBox doesn't have setItems(); replace contents via getItems().setAll(...)
+            approvalRecipientCombo.getItems().setAll(recipients);
+
         }
 
         // populate denial combos if present
         if (denialReasonCombo != null) {
             ObservableList<String> reasons = FXCollections.observableArrayList(
-                "Insufficient grade",
-                "Non-equivalent course",
+                "Incomplete information on the syllabus",
+                "Different Programming Language",
+                "Different Credit Hours",
                 "Other"
             );
             denialReasonCombo.setItems(reasons);
+
+            // Sets the first index as default
             if (!reasons.isEmpty()) denialReasonCombo.getSelectionModel().selectFirst();
         }
 
@@ -359,15 +448,81 @@ public class FormDetailedController {
             denialReasonOtherField.setManaged(show);
         }
 
+        // Populate the denial recipient check combo if they exist in the loaded FXML
         if (denialRecipientCombo != null) {
-            ObservableList<String> recipients = FXCollections.observableArrayList(
-                "Student",
-                "Department",
-                "Registrar"
-            );
-            denialRecipientCombo.setItems(recipients);
-            if (!recipients.isEmpty()) denialRecipientCombo.getSelectionModel().selectFirst();
+            ObservableList<String> recipients = FXCollections.observableArrayList();
+            // Now fetch advisors, excluding loggedInAdvisorId if known
+            String sqlAll = loggedInAdvisorId == null
+                ? "SELECT AdvisorID, Advisor_Name FROM Advisor"
+                : "SELECT AdvisorID, Advisor_Name FROM Advisor WHERE AdvisorID <> ?";
+
+            try (PreparedStatement stmt = connection.prepareStatement(sqlAll)) {
+                if (loggedInAdvisorId != null) {
+                    stmt.setInt(1, loggedInAdvisorId);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String name = rs.getString("Advisor_Name");
+                        recipients.add(name);
+                        recipientNameToId.put(name, rs.getInt("AdvisorID"));
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Add a single department label: prefer the student's department name, otherwise fall back to "CS Department"
+            String deptLabel = (studentDeptName != null && !studentDeptName.isEmpty()) ? studentDeptName : "CS Department";
+            if (!recipients.contains(deptLabel)) recipients.add(deptLabel);
+            // CheckComboBox doesn't have setItems(); replace contents via getItems().setAll(...)
+            denialRecipientCombo.getItems().setAll(recipients);
+            
         }
+        
+        // Wire up the confirm buttons in the overlays
+        if (confirmApprovalButton != null) {
+            confirmApprovalButton.setOnAction(event -> {
+                try {
+                    confirmApproval();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        
+        if (confirmDenialButton != null) {
+            confirmDenialButton.setOnAction(event -> {
+                try {
+                    confirmDenial();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        
+        if (confirmSendBackButton != null) {
+            confirmSendBackButton.setOnAction(event -> {
+                try {
+                    confirmSendBack();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+    
+    // Set the current logged-in user
+    public void setCurrentUser(TCEPUser user) {
+        this.currentUser = user;
+    }
+
+    // Set the form table controller reference to allow removing forms
+    public void setFormTableController(FormTableController controller) {
+        this.formTableController = controller;
+    }
+
+    // Set the navigation controller reference to allow switching views
+    public void setNavigationController(NavigationController controller) {
+        this.navigationController = controller;
     }
 
     // Close and remove any overlay
@@ -375,6 +530,16 @@ public class FormDetailedController {
     public void closeOverlay() {
         overlayContainer.getChildren().clear();
         overlayContainerBackground.setVisible(false);
+        
+        // Navigate back to form table view after closing overlay if flag is set
+        if (shouldNavigateToTableOnClose && navigationController != null) {
+            shouldNavigateToTableOnClose = false; // Reset flag
+            try {
+                navigationController.swapView(NavigationController.View.Table);
+            } catch (Exception e) {
+                System.err.println("Error navigating to table view: " + e.getMessage());
+            }
+        }
     }
 
     //Handle verification of course equivalency by checkin database for institution, courses
@@ -506,7 +671,17 @@ public class FormDetailedController {
                 return;
             }
         }
-        String recipient = approvalRecipientCombo == null ? null : approvalRecipientCombo.getValue();
+        
+        // Get selected recipients from CheckComboBox
+        java.util.List<String> recipients = approvalRecipientCombo == null 
+            ? java.util.Collections.emptyList() 
+            : approvalRecipientCombo.getCheckModel().getCheckedItems();
+        
+        // Validate that at least one recipient is selected
+        if (recipients.isEmpty()) {
+            System.err.println("Please select at least one recipient before approving.");
+            return;
+        }
         
         // Save approval to database
         if (currentForm != null && currentForm.getId() > 0) {
@@ -516,14 +691,17 @@ public class FormDetailedController {
                 
                 String formattedReason = String.format("Approved%s%s", 
                     reason != null && !reason.trim().isEmpty() ? ": " + reason : "",
-                    recipient != null ? " (Recipient: " + recipient + ")" : "");
+                    !recipients.isEmpty() ? " (Recipients: " + String.join(", ", recipients) + ")" : "");
                 
                 TCEPDatabaseService.addStatusHistory(currentForm.getId(), approvedStatusId, 
                     formattedReason, null);
                 TCEPDatabaseService.updateFormStatus(currentForm.getId(), approvedStatusId);
                 currentForm.setStatusReason(reason);
                 currentForm.setStatus(String.valueOf(approvedStatusId));
-                System.out.println("Approval confirmed and saved. Reason: " + reason + ", Recipient: " + recipient);
+                System.out.println("Approval confirmed and saved. Reason: " + reason + ", Recipients: " + recipients);
+                
+                // Process each recipient
+                processRecipientsForAction(recipients, "Approved", formattedReason);
                 
                 // Refresh table to reflect status change
                 if (onStatusChangeCallback != null) {
@@ -533,6 +711,16 @@ public class FormDetailedController {
                 e.printStackTrace();
                 System.err.println("Failed to save approval: " + e.getMessage());
             }
+        }
+
+        String deptLabel = (currentStudentDepartment != null && !currentStudentDepartment.isEmpty()) 
+            ? currentStudentDepartment : "CS Department";
+        boolean showingPDF = recipients.contains(deptLabel);
+
+        // Remove form from table if NOT showing PDF (defer removal until after PDF is created)
+        if (!showingPDF && formTableController != null && currentForm != null) {
+            System.out.println("Removing form " + currentForm.getId() + " from table (no PDF)");
+            formTableController.removeFormFromUI(currentForm);
         }
 
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formapprovalview.fxml"));
@@ -546,7 +734,16 @@ public class FormDetailedController {
         // Show confirmation feedback overlay (Written by Ryan Pham (rkp200003))
         loadOverlay("/utd/tcep/formdecisionfeedbackoverlay");
         resultTitle.setText("Form Accepted");
-        resultText.setText("The form has been accepted. You may now close this window.");
+        resultText.setText("The form has been accepted.");
+        
+        // Show Generate PDF button if department is selected
+        if (showingPDF && generatePdfFromFeedbackButton != null) {
+            generatePdfFromFeedbackButton.setVisible(true);
+            generatePdfFromFeedbackButton.setManaged(true);
+        } else {
+            // Set flag to navigate to table when overlay is closed (not showing PDF)
+            shouldNavigateToTableOnClose = true;
+        }
     }
 
     // Changes made to denial action
@@ -563,8 +760,19 @@ public class FormDetailedController {
                 return;
             }
         }
-        String recipient = denialRecipientCombo == null ? null : denialRecipientCombo.getValue();
-        System.out.println("Denial confirmed. Reason: " + reason + ", Recipient: " + recipient);
+        
+        // Get selected recipients from CheckComboBox
+        java.util.List<String> recipients = denialRecipientCombo == null 
+            ? java.util.Collections.emptyList() 
+            : denialRecipientCombo.getCheckModel().getCheckedItems();
+        
+        // Validate that at least one recipient is selected
+        if (recipients.isEmpty()) {
+            System.err.println("Please select at least one recipient before denying.");
+            return;
+        }
+        
+        System.out.println("Denial confirmed. Reason: " + reason + ", Recipients: " + recipients);
 
         // Save denial reason to database
         if (currentForm != null && currentForm.getId() > 0 && reason != null && !reason.trim().isEmpty()) {
@@ -572,11 +780,14 @@ public class FormDetailedController {
                 // Get or create "Denied" status (CategoryID 3 = Denied)
                 int deniedStatusId = TCEPDatabaseService.getOrCreateStatusId("Denied", 3);
                 TCEPDatabaseService.addStatusHistory(currentForm.getId(), deniedStatusId, 
-                    "Denied: " + reason + " (Recipient: " + recipient + ")", null);
+                    "Denied: " + reason + " (Recipients: " + String.join(", ", recipients) + ")", null);
                 TCEPDatabaseService.updateFormStatus(currentForm.getId(), deniedStatusId);
                 currentForm.setStatusReason(reason);
                 currentForm.setStatus(String.valueOf(deniedStatusId));
                 System.out.println("Denial reason saved to database");
+                
+                // Process each recipient
+                processRecipientsForAction(recipients, "Denied", "Denied: " + reason);
                 
                 // Refresh table to reflect status change
                 if (onStatusChangeCallback != null) {
@@ -586,6 +797,25 @@ public class FormDetailedController {
                 e.printStackTrace();
                 System.err.println("Failed to save denial reason: " + e.getMessage());
             }
+        }
+
+        String deptLabel = (currentStudentDepartment != null && !currentStudentDepartment.isEmpty()) 
+            ? currentStudentDepartment : "CS Department";
+        boolean showingPDF = recipients.contains(deptLabel);
+
+        System.out.println("DEBUG: deptLabel=" + deptLabel + ", showingPDF=" + showingPDF);
+        System.out.println("DEBUG: formTableController=" + formTableController + ", currentForm=" + currentForm);
+
+        // Remove form from table if NOT showing PDF (defer removal until after PDF is created)
+        if (!showingPDF && formTableController != null && currentForm != null) {
+            System.out.println("Removing form " + currentForm.getId() + " from table (no PDF)");
+            formTableController.removeFormFromUI(currentForm);
+            // Navigate back to form table view
+            if (navigationController != null) {
+                System.out.println("Navigating back to table view");
+            }
+        } else if (!showingPDF) {
+            System.out.println("DEBUG: Not removing form - formTableController or currentForm is null");
         }
 
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formdenialview.fxml"));
@@ -600,6 +830,15 @@ public class FormDetailedController {
         loadOverlay("/utd/tcep/formdecisionfeedbackoverlay");
         resultTitle.setText("Form Denied");
         resultText.setText("The form has been denied. You may now close this window.");
+        
+        // Show Generate PDF button if department is selected
+        if (showingPDF && generatePdfFromFeedbackButton != null) {
+            generatePdfFromFeedbackButton.setVisible(true);
+            generatePdfFromFeedbackButton.setManaged(true);
+        } else {
+            // Set flag to navigate to table when overlay is closed (not showing PDF)
+            shouldNavigateToTableOnClose = true;
+        }
     }
 
     // Changes made to send back action
@@ -616,8 +855,19 @@ public class FormDetailedController {
                 return;
             }
         }
-        String recipient = sendBackRecipientCombo == null ? null : sendBackRecipientCombo.getValue();
-        System.out.println("Send back confirmed. Reason: " + reason + ", Recipient: " + recipient);
+        
+        // Get selected recipients from CheckComboBox
+        java.util.List<String> recipients = sendBackRecipientCombo == null 
+            ? java.util.Collections.emptyList() 
+            : sendBackRecipientCombo.getCheckModel().getCheckedItems();
+        
+        // Validate that at least one recipient is selected
+        if (recipients.isEmpty()) {
+            System.err.println("Please select at least one recipient before sending back.");
+            return;
+        }
+        
+        System.out.println("Send back confirmed. Reason: " + reason + ", Recipients: " + recipients);
 
         // Save send back reason to database
         if (currentForm != null && currentForm.getId() > 0 && reason != null && !reason.trim().isEmpty()) {
@@ -625,11 +875,14 @@ public class FormDetailedController {
                 // Get or create "Sent Back" status (CategoryID 4 = Sent Back)
                 int sentBackStatusId = TCEPDatabaseService.getOrCreateStatusId("Sent Back", 4);
                 TCEPDatabaseService.addStatusHistory(currentForm.getId(), sentBackStatusId, 
-                    "Sent Back: " + reason + " (Recipient: " + recipient + ")", null);
+                    "Sent Back: " + reason + " (Recipients: " + String.join(", ", recipients) + ")", null);
                 TCEPDatabaseService.updateFormStatus(currentForm.getId(), sentBackStatusId);
                 currentForm.setStatusReason(reason);
                 currentForm.setStatus(String.valueOf(sentBackStatusId));
                 System.out.println("Send back reason saved to database");
+                
+                // Process each recipient
+                processRecipientsForAction(recipients, "Sent Back", "Sent Back: " + reason);
                 
                 // Refresh table to reflect status change
                 if (onStatusChangeCallback != null) {
@@ -641,6 +894,25 @@ public class FormDetailedController {
             }
         }
 
+        String deptLabel = (currentStudentDepartment != null && !currentStudentDepartment.isEmpty()) 
+            ? currentStudentDepartment : "CS Department";
+        boolean showingPDF = recipients.contains(deptLabel);
+
+        System.out.println("DEBUG: deptLabel=" + deptLabel + ", showingPDF=" + showingPDF);
+        System.out.println("DEBUG: formTableController=" + formTableController + ", currentForm=" + currentForm);
+
+        // Remove form from table if NOT showing PDF (defer removal until after PDF is created)
+        if (!showingPDF && formTableController != null && currentForm != null) {
+            System.out.println("Removing form " + currentForm.getId() + " from table (no PDF)");
+            formTableController.removeFormFromUI(currentForm);
+            // Navigate back to form table view
+            if (navigationController != null) {
+                System.out.println("Navigating back to table view");
+            }
+        } else if (!showingPDF) {
+            System.out.println("DEBUG: Not removing form - formTableController or currentForm is null");
+        }
+        
         FXMLLoader loader = new FXMLLoader(TCEPWorkflowApp.class.getResource("/utd/tcep/formsendbackview.fxml"));
 
         // Use this controller for overlay callbacks (so overlay can call closeOverlay())
@@ -652,19 +924,95 @@ public class FormDetailedController {
         loadOverlay("/utd/tcep/formdecisionfeedbackoverlay");
         resultTitle.setText("Form Sent Back");
         resultText.setText("The form has been sent back. You may now close this window.");
+        
+        // Show Generate PDF button if department is selected
+        if (showingPDF && generatePdfFromFeedbackButton != null) {
+            generatePdfFromFeedbackButton.setVisible(true);
+            generatePdfFromFeedbackButton.setManaged(true);
+        } else {
+            // Set flag to navigate to table when overlay is closed (not showing PDF)
+            shouldNavigateToTableOnClose = true;
+        }
+    }
+    
+    // Helper method to process multiple recipients for an action
+    // Iterates through selected recipients and records action in database
+    // Written by Nicolas Hartono (nxh210004)
+    private void processRecipientsForAction(java.util.List<String> recipients, String actionType, String comments) {
+        if (recipients == null || recipients.isEmpty() || currentForm == null) {
+            return;
+        }
+        
+        int formId = currentForm.getId();
+        System.out.println("Processing " + recipients.size() + " recipients for action: " + actionType);
+        
+        // Get status ID (2=Approved, 3=Denied, 4=Sent Back)
+        int newStatusId = actionType.equals("Approved") ? 2 : (actionType.equals("Denied") ? 3 : 4);
+        
+        // Update form status in database
+        try {
+            TCEPDatabaseService.updateFormStatus(formId, newStatusId);
+        } catch (SQLException e) {
+            System.err.println("Error updating form status: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Create status history entry for each recipient advisor
+        for (String recipientName : recipients) {
+            // Check if this is a department label (not an advisor name)
+            if (recipientName.contains("Department")) {
+                System.out.println("Skipping department label: " + recipientName);
+                continue;
+            }
+            
+            // Look up advisor ID from the map
+            Integer advisorId = recipientNameToId.get(recipientName);
+            if (advisorId != null) {
+                System.out.println("Creating status history for recipient: " 
+                    + recipientName + " (ID: " + advisorId + ")");
+                try {
+                    // Create status history entry - this makes the form appear in recipient's list
+                    TCEPDatabaseService.addStatusHistoryWithAdvisor(formId, newStatusId, comments, advisorId, null);
+                    System.out.println("Successfully added status history for advisor " + advisorId);
+                } catch (SQLException e) {
+                    System.err.println("Error adding status history for advisor " + advisorId + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                System.err.println("Could not find advisor ID for recipient: " + recipientName);
+            }
+        }
     }
 
     @FXML
     public void handleGeneratePDF(String templatePath, String outputPath) {
         exportPDF(templatePath, outputPath);
     }
+    
+    // Handle Generate PDF button click from confirmation feedback overlay
+    @FXML
+    public void handleGeneratePDFFromFeedback() {
+        String templatePath = "Blank TCEP.pdf";
+        boolean pdfExported = showPDFPreview(templatePath);
+        // Only remove form if PDF was actually exported (not canceled)
+        if (pdfExported && formTableController != null && currentForm != null) {
+            System.out.println("Removing form " + currentForm.getId() + " from table after PDF export");
+            formTableController.removeFormFromUI(currentForm);
+        }
+        // Navigate back to form list after PDF dialog is closed
+        if (navigationController != null) {
+            navigationController.swapView(NavigationController.View.Table);
+        }
+    }
 
     // Show PDF preview in a dialog before exporting
     // Written by Davis Huynh (dxh170005)
-    private void showPDFPreview(String templatePath) {
+    // Returns true if PDF was exported, false if canceled
+    private boolean showPDFPreview(String templatePath) {
+        final boolean[] pdfExported = {false};
         try {
             PDDocument pdfDoc = generatePDFDocument(templatePath);
-            if (pdfDoc == null) return;
+            if (pdfDoc == null) return false;
 
             PDFRenderer renderer = new PDFRenderer(pdfDoc);
             BufferedImage bufferedImage = renderer.renderImageWithDPI(0, 150);
@@ -705,6 +1053,7 @@ public class FormDetailedController {
                     try {
                         pdfDoc.save(file.getAbsolutePath());
                         System.out.println("PDF exported successfully to: " + file.getAbsolutePath());
+                        pdfExported[0] = true;
                         previewStage.close();
                     } catch (IOException ex) {
                         ex.printStackTrace();
@@ -723,6 +1072,7 @@ public class FormDetailedController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return pdfExported[0];
     }
 
     // Generate PDF document in memory without saving to file
@@ -766,12 +1116,12 @@ public class FormDetailedController {
             // Check approval/denial checkboxes based on status
             if (currentForm != null && currentForm.getStatus() != null) {
                 String status = currentForm.getStatus();
-                // Status 4 = Approved, check "ASSOCIATE DEAN RESPONSE"
-                if ("4".equals(status)) {
+                // Status 2 = Approved
+                if ("2".equals(status)) {
                     fillField(acroForm, "ASSOCIATE DEAN RESPONSE", "X");
                 }
-                // Status 2 = Denied, check "undefined_2"
-                else if ("2".equals(status)) {
+                // Status 3 = Denied
+                else if ("3".equals(status)) {
                     fillField(acroForm, "undefined_2", "X");
                 }
             }
@@ -785,21 +1135,10 @@ public class FormDetailedController {
         }
     }
     
-    // Clear all fields in the form
+    // Clear all fields in the form and reset to blank form state
     // Written by Ryan Pham (rkp200003)
     private void clearForm() {
-        firstNameField.setText("");
-        lastNameField.setText("");
-        miField.setText("");
-        studentIdField.setText("");
-        origCourseNumField.setText("");
-        origCourseTitleField.setText("");
-        origCreditHoursField.setText("");
-        sourceInstitutionNameField.setText("");
-        sourceInstitutionLocationField.setText("");
-        equivalentCourseField.setText("");
-        satisfiedRequirementField.setText("");
-        coreDesignationField.setText("");
+        clearFormFields();
         
         // Initialize currentForm for new form creation
         if (currentForm == null || currentForm.getId() > 0) {
@@ -824,6 +1163,24 @@ public class FormDetailedController {
             startedDateLabel.setText("Started: " + java.time.LocalDate.now().toString());
         }
     }
+    
+    // Clear only the text fields without resetting currentForm
+    // Used when loading existing form data
+    // Written by Ryan Pham (rkp200003)
+    private void clearFormFields() {
+        firstNameField.setText("");
+        lastNameField.setText("");
+        miField.setText("");
+        studentIdField.setText("");
+        origCourseNumField.setText("");
+        origCourseTitleField.setText("");
+        origCreditHoursField.setText("");
+        sourceInstitutionNameField.setText("");
+        sourceInstitutionLocationField.setText("");
+        equivalentCourseField.setText("");
+        satisfiedRequirementField.setText("");
+        coreDesignationField.setText("");
+    }
 
     // Set currently managed form and fill all text fields in UI when set
     // Written by Ryan Pham (rkp200003)
@@ -839,10 +1196,17 @@ public class FormDetailedController {
         
         currentForm = form;
 
-        clearForm();
+        // Only clear fields visually, don't reset currentForm
+        clearFormFields();
 
+        // Only load from database if the form actually exists in database
+        // Check if form exists before loading to avoid loading wrong data for blank forms
         try {
-            loadByID(form.getId());
+            if (TCEPDatabaseService.getFormDataById(form.getId()) != null) {
+                loadByID(form.getId());
+            } else {
+                System.out.println("Form ID " + form.getId() + " not found in database, treating as blank form");
+            }
         } catch (SQLException e) {
             System.err.println("Error loading form data: " + e.getMessage());
             e.printStackTrace();
@@ -982,8 +1346,8 @@ public class FormDetailedController {
             // Check approval/denial checkboxes based on status
             if (currentForm != null && currentForm.getStatus() != null) {
                 String status = currentForm.getStatus();
-                // Status 4 = Approved, check "ASSOCIATE DEAN RESPONSE"
-                if ("4".equals(status)) {
+                // Status 2 = Approved, check "ASSOCIATE DEAN RESPONSE"
+                if ("2".equals(status)) {
                     fillField(acroForm, "ASSOCIATE DEAN RESPONSE", "Yes");
                 }
                 // Status 3 = Denied, check "undefined_2"

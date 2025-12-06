@@ -76,22 +76,88 @@ public class TCEPDatabaseService {
     // ==================== DATA ACCESS METHODS (DATABASE LAYER) ====================
     
     /**
-     * Gets all forms from the database
+     * Gets all forms from the database, optionally filtered by advisor
+     * @param advisorId Optional advisor ID to filter forms (null for all forms)
      * @return ResultSet containing all form data
      * @throws SQLException if database error occurs
+     * Modified by Nicolas Hartono (nxh210004) to filter by advisor
      */
-    public static ResultSet getAllForms() throws SQLException {
-        String sql =
-            "SELECT f.FormID, f.RequestDate, f.Term, f.Year, s.UtdID, s.NetID, " +
-            "       f.StudentID, f.StatusID, f.NetID, s.Student_Name, i.Institution_Name " +
-            "FROM TCEP_Form f " +
-            "JOIN Student s ON s.StudentID = f.StudentID " +
-            "JOIN Institution i ON i.InstitutionID = f.InstitutionID " +
-            "ORDER BY f.RequestDate DESC";
+    public static ResultSet getAllForms(Integer advisorId) throws SQLException {
+        String sql;
+        
+        if (advisorId != null) {
+            // Show forms where this advisor is the current recipient:
+            // - New forms (student assigned, no history)
+            // - Transferred forms (most recent history entry points to this advisor)
+            // - Legacy forms (student assigned, has history, but no advisor transfers)
+            sql =
+                "SELECT DISTINCT f.FormID, f.RequestDate, f.Term, f.Year, s.UtdID, s.NetID, " +
+                "       f.StudentID, f.StatusID, f.NetID, s.Student_Name, i.Institution_Name " +
+                "FROM TCEP_Form f " +
+                "JOIN Student s ON s.StudentID = f.StudentID " +
+                "JOIN Institution i ON i.InstitutionID = f.InstitutionID " +
+                "WHERE (" +
+                "    (s.AdvisorID = ? AND NOT EXISTS (" +
+                "        SELECT 1 FROM TCEP_Status_History h WHERE h.FormID = f.FormID" +
+                "    ))" +
+                "    OR EXISTS (" +
+                "        SELECT 1 FROM TCEP_Status_History h2 " +
+                "        WHERE h2.FormID = f.FormID " +
+                "        AND h2.AdvisorID = ? " +
+                "        AND h2.Changed_On = (" +
+                "            SELECT MAX(h3.Changed_On) " +
+                "            FROM TCEP_Status_History h3 " +
+                "            WHERE h3.FormID = f.FormID AND h3.AdvisorID IS NOT NULL" +
+                "        )" +
+                "    )" +
+                "    OR (s.AdvisorID = ? AND EXISTS (" +
+                "        SELECT 1 FROM TCEP_Status_History h4 WHERE h4.FormID = f.FormID" +
+                "    ) AND NOT EXISTS (" +
+                "        SELECT 1 FROM TCEP_Status_History h5 " +
+                "        WHERE h5.FormID = f.FormID AND h5.AdvisorID IS NOT NULL" +
+                "    ))" +
+                ") " +
+                "ORDER BY f.RequestDate DESC";
+        } else {
+            // Get all forms without filtering
+            sql =
+                "SELECT f.FormID, f.RequestDate, f.Term, f.Year, s.UtdID, s.NetID, " +
+                "       f.StudentID, f.StatusID, f.NetID, s.Student_Name, i.Institution_Name " +
+                "FROM TCEP_Form f " +
+                "JOIN Student s ON s.StudentID = f.StudentID " +
+                "JOIN Institution i ON i.InstitutionID = f.InstitutionID " +
+                "ORDER BY f.RequestDate DESC";
+        }
 
         Connection conn = getConnection();
         PreparedStatement ps = conn.prepareStatement(sql);
+        
+        if (advisorId != null) {
+            ps.setInt(1, advisorId);
+            ps.setInt(2, advisorId);
+            ps.setInt(3, advisorId);
+        }
+        
         return ps.executeQuery();
+    }
+    
+    /**
+     * Gets the maximum FormID from the database
+     * @return The maximum FormID, or null if no forms exist
+     * @throws SQLException if database error occurs
+     * Written by Nicolas Hartono (nxh210004)
+     */
+    public static Integer getMaxFormID() throws SQLException {
+        String sql = "SELECT MAX(FormID) as MaxID FROM TCEP_Form";
+        Connection conn = getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int maxId = rs.getInt("MaxID");
+                return rs.wasNull() ? null : maxId;
+            }
+            return null;
+        }
     }
     
     /**
@@ -148,13 +214,13 @@ public class TCEPDatabaseService {
                 + "s.UtdID, s.NetID, f.Incoming_CourseID, ic.CourseName AS IncomingCourseName, ic.CourseNumber AS IncomingCourseNumber, "
                 + "f.Equivalent_CourseID, ec.UTDCourseNumber AS EquivalentCourseNumber, "
                 + "f.InstitutionID, inst.Institution_Name AS InstitutionName, "
-                + "f.StartAdvisorID, adv.Advisor_Name AS StartAdvisorName, f.RequestDate "
+                + "s.AdvisorID, adv.Advisor_Name AS StartAdvisorName, f.RequestDate "
                 + "FROM tcep_form f "
                 + "LEFT JOIN student s ON f.StudentID = s.StudentID "
                 + "LEFT JOIN incoming_course ic ON f.Incoming_CourseID = ic.Incoming_CourseID "
                 + "LEFT JOIN equivalent_course ec ON f.Equivalent_CourseID = ec.Equivalent_CourseID "
                 + "LEFT JOIN institution inst ON f.InstitutionID = inst.InstitutionID "
-                + "LEFT JOIN advisor adv ON f.StartAdvisorID = adv.AdvisorID "
+                + "LEFT JOIN advisor adv ON s.AdvisorID = adv.AdvisorID "
                 + "WHERE f.FormID = ?";
 
         Connection conn = getConnection();
@@ -277,6 +343,39 @@ public class TCEPDatabaseService {
                 ps.setInt(4, studentId);
             } else {
                 ps.setNull(4, java.sql.Types.INTEGER);
+            }
+            ps.executeUpdate();
+        }
+    }
+    
+    /**
+     * Adds a status history entry with advisor ID (for workflow transfers)
+     * @param formId The form ID
+     * @param statusId The status ID (from Transfer_Status table)
+     * @param reason The reason/comments for the status change
+     * @param advisorId The advisor ID (recipient of the form)
+     * @param studentId The student ID (optional)
+     * @throws SQLException if database error occurs
+     * Written by Nicolas Hartono (nxh210004)
+     */
+    public static void addStatusHistoryWithAdvisor(int formId, int statusId, String reason, Integer advisorId, Integer studentId) throws SQLException {
+        String sql = "INSERT INTO TCEP_Status_History (Changed_On, Comments, FormID, StatusID, AdvisorID, StudentID) " +
+                     "VALUES (NOW(), ?, ?, ?, ?, ?)";
+        
+        Connection conn = getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reason);
+            ps.setInt(2, formId);
+            ps.setInt(3, statusId);
+            if (advisorId != null) {
+                ps.setInt(4, advisorId);
+            } else {
+                ps.setNull(4, java.sql.Types.INTEGER);
+            }
+            if (studentId != null) {
+                ps.setInt(5, studentId);
+            } else {
+                ps.setNull(5, java.sql.Types.INTEGER);
             }
             ps.executeUpdate();
         }

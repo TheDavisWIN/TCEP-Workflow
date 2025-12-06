@@ -28,13 +28,15 @@ public class TCEPFormTable {
      * Calls the database layer to get data, then transforms ResultSet into TCEPForm objects.
      * Each row from the ResultSet is converted into a TCEPForm object and added to an ObservableList,
      * which is then bound to the TableView for display.
+     * @param advisorId Optional advisor ID to filter forms (null for all forms)
      * Written by Jeffrey Chou (jxc033200)
+     * Modified by Nicolas Hartono (nxh210004) to filter by advisor
      */
-    public void loadForms() throws SQLException {
+    public void loadForms(Integer advisorId) throws SQLException {
         rows.clear();
         
         // Get data from database layer
-        try (ResultSet rs = TCEPDatabaseService.getAllForms()) {
+        try (ResultSet rs = TCEPDatabaseService.getAllForms(advisorId)) {
             // Transform ResultSet into domain objects
             while (rs.next()) {
                 TCEPForm f = new TCEPForm(rs.getInt("FormID"));
@@ -69,6 +71,12 @@ public class TCEPFormTable {
         }
     }
 
+    /**
+     * Creates a new blank TCEPForm with a unique FormID and current date.
+     * Adds the new form to the rows list.
+     * @return The newly created blank TCEPForm
+     * Written by Jeffrey Chou (jxc033200)
+     */
     public TCEPForm createBlankForm() {
         TCEPForm newForm = new TCEPForm(getNewFormID());
         newForm.setStartedDate(LocalDate.now());
@@ -76,13 +84,33 @@ public class TCEPFormTable {
         return newForm;
     }
 
+    /**
+     * Generates a new unique FormID by finding the maximum existing FormID and adding 1.
+     * Queries the database to ensure the ID is truly unique.
+     * @return A new unique FormID
+     * Written by Jeffrey Chou (jxc033200)
+     * Modified by Nicolas Hartono (nxh210004) to query database
+     */
     public int getNewFormID() {
         int maxID = 0;
+        
+        // Check in-memory rows first
         for (TCEPForm form : rows) {
             if (form.formID > maxID) {
                 maxID = form.formID;
             }
         }
+        
+        // Also check database to ensure we don't have ID conflicts
+        try {
+            Integer dbMaxId = TCEPDatabaseService.getMaxFormID();
+            if (dbMaxId != null && dbMaxId > maxID) {
+                maxID = dbMaxId;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting max FormID from database: " + e.getMessage());
+        }
+        
         return maxID + 1;
     }
 }
