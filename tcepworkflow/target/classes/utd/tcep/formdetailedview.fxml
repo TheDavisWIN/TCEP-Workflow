@@ -11,18 +11,17 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-
 <StackPane prefHeight="915.0" prefWidth="1034.0" stylesheets="@style/tcepstyle.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="utd.tcep.controllers.FormDetailedController">
    <children>
       <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
          <children>
-            <ScrollPane>
+            <ScrollPane fitToHeight="true" fitToWidth="true" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
                <content>
-                  <VBox fx:id="formViewContainer" prefHeight="915.0" prefWidth="733.0" spacing="25" style="-fx-padding: 30;">
+                  <VBox fx:id="formViewContainer" maxWidth="1.7976931348623157E308" prefHeight="915.0" prefWidth="733.0" spacing="25" style="-fx-padding: 30;">
                      <children>
                         <HBox alignment="CENTER_LEFT" spacing="20">
                            <children>
-                              <Button fx:id="viewHistoryButton" text="View History" />
+                              <Button fx:id="viewHistoryButton" text="View History" onAction="#handleViewHistory" />
                               <Button fx:id="generatePdfButton" text="Generate PDF" />
                               <Button fx:id="editButton" text="Edit" />
                               <Button fx:id="deleteButton" text="Delete" />
@@ -46,7 +45,7 @@
                               </VBox>
                            </children>
                         </HBox>
-                        <VBox spacing="40.0" VBox.vgrow="ALWAYS">
+                        <VBox maxWidth="1.7976931348623157E308" spacing="20.0" VBox.vgrow="ALWAYS">
                            <children>
                               <VBox spacing="4.0">
                                  <children>
@@ -134,30 +133,22 @@
                                     </HBox>
                                  </children>
                               </VBox>
-                              <VBox spacing="4.0">
+                              <VBox>
                                  <children>
-                                    <VBox>
-                                       <children>
-                                          <VBox HBox.hgrow="ALWAYS">
-                                             <children>
-                                                <TextField fx:id="equivalentCourseField" prefWidth="150" styleClass="form-text-field" />
-                                                <Label text="Equivalent Course" />
-                                             </children>
-                                          </VBox>
-                                          <VBox HBox.hgrow="ALWAYS">
-                                             <children>
-                                                <TextField fx:id="satisfiedRequirementField" prefWidth="150" styleClass="form-text-field" />
-                                                <Label text="Satisfied Requirement" />
-                                             </children>
-                                          </VBox>
-                                          <VBox HBox.hgrow="ALWAYS">
-                                             <children>
-                                                <TextField fx:id="coreDesignationField" prefWidth="150" styleClass="form-text-field" />
-                                                <Label text="Core Designation" />
-                                             </children>
-                                          </VBox>
-                                       </children>
-                                    </VBox>
+                                    <TextField fx:id="satisfiedRequirementField" prefWidth="150" styleClass="form-text-field" />
+                                    <Label text="Satisfied Requirement" />
+                                 </children>
+                              </VBox>
+                              <VBox>
+                                 <children>
+                                    <TextField fx:id="coreDesignationField" prefWidth="150" styleClass="form-text-field" />
+                                    <Label text="Core Designation" />
+                                 </children>
+                              </VBox>
+                              <VBox>
+                                 <children>
+                                    <TextField fx:id="equivalentCourseField" prefWidth="150" styleClass="form-text-field" />
+                                    <Label text="Equivalent Course" />
                                  </children>
                               </VBox>
                            </children>

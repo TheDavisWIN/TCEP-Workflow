@@ -21,7 +21,7 @@
                      <children>
                         <HBox alignment="CENTER_LEFT" spacing="20">
                            <children>
-                              <Button fx:id="viewHistoryButton" text="View History" />
+                              <Button fx:id="viewHistoryButton" text="View History" onAction="#handleViewHistory" />
                               <Button fx:id="generatePdfButton" text="Generate PDF" />
                               <Button fx:id="editButton" text="Edit" />
                               <Button fx:id="deleteButton" text="Delete" />

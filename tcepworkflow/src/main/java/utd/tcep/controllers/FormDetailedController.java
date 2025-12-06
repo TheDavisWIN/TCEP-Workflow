@@ -15,7 +15,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.rendering.PDFRenderer;
-
+import java.net.URL;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.fxml.FXMLLoader;
@@ -25,6 +25,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -44,6 +45,7 @@ import utd.tcep.data.TCEPFormTable;
 import utd.tcep.data.TCEPUser;
 import utd.tcep.main.TCEPWorkflowApp;
 import utd.tcep.db.TCEPDatabaseService;
+import javafx.scene.Node;
 
 public class FormDetailedController {
 
@@ -55,6 +57,8 @@ public class FormDetailedController {
     private String lastName;
     private String middleName;
     private boolean loadingForm = false;
+    private NavigationController navigationController; // To switch views later
+    private Node currentHistoryView; // Track if we're showing history
 
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
@@ -105,6 +109,7 @@ public class FormDetailedController {
     @FXML private Label statusLabel;
     @FXML private Label resultTitle;
     @FXML private Label resultText;
+    
     
 
     // Setup property listeners for fields in the form
@@ -215,10 +220,32 @@ public class FormDetailedController {
         // Disable all form fields by default until Edit mode is enabled
         setFieldsEditable(false);
     }
-    // Show form's change history
+
     @FXML
-    private void handleViewHistory() throws IOException {
-        
+    private void handleViewHistory() {
+        try {
+            URL fxmlUrl = TCEPWorkflowApp.class.getResource("/utd/tcep/formhistoryview.fxml");
+            if (fxmlUrl == null) {
+                new Alert(Alert.AlertType.ERROR, "formhistoryview.fxml not found!").showAndWait();
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            Node historyRoot = loader.load();
+            TCEPHistoryController controller = loader.getController();
+            controller.setFormData(currentForm.getId(), this);
+
+            GridPane grid = navigationController.getAppGridPane();
+            grid.getChildren().removeIf(n -> GridPane.getColumnIndex(n) != null && GridPane.getColumnIndex(n) == 1);
+            grid.add(historyRoot, 1, 0);
+
+            // THIS LINE IS THE KEY — tell NavigationController we're now in "History" mode
+            currentHistoryView = historyRoot;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Failed to load history: " + e.getMessage()).showAndWait();
+        }
     }
 
     // Load an overlay FXML into the overlay container and make it visible.
@@ -1229,6 +1256,23 @@ public class FormDetailedController {
         satisfiedRequirementField.setEditable(editable);
         coreDesignationField.setEditable(editable);
     }
+
+    public void setNavigationController(NavigationController nav) {
+    this.navigationController = nav;
+    }
+    public NavigationController getNavigationController() {
+    return navigationController;
+}
+
+public Node getCurrentHistoryView() {
+    return currentHistoryView;
+}
+
+public void clearCurrentHistoryView() {
+    currentHistoryView = null;
+}
+
+
 }
 
  

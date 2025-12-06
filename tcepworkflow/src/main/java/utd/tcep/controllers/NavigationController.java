@@ -45,6 +45,8 @@ public class NavigationController {
     private FormTableController formTableController;
     private LoginController loginController;
 
+
+
     // Automatically called on program start, saving controllers for future method calls
     // Ryan Pham (rkp200003)
     // Davis Huynh (dxh170005) (added Login view)
@@ -66,6 +68,9 @@ public class NavigationController {
         formTableController = formTableViewLoader.getController();
         loginController = loginViewLoader.getController();
         loginController.setNavigationController(this);
+        // Give detailed controller reference to navigation
+        formDetailedController.setNavigationController(this);
+    
         
         // Set callback to refresh table when status changes in detailed view
         formDetailedController.setOnStatusChangeCallback(() -> {
@@ -166,5 +171,20 @@ public class NavigationController {
                 break;
         }
     }
+
+    public GridPane getAppGridPane() {
+    return appGridPane;
 }
+    public Node getDetailedViewNode() {
+        return formDetailedView;
+    }
+
+
+
+}
+
+
+
+
+
  

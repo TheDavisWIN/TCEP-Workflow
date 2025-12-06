@@ -1,9 +1,9 @@
+-- Written by Ayden Benel (acb210001)
 -- Completely reset the database
 DROP DATABASE IF EXISTS tcep;
 CREATE DATABASE tcep;
 USE tcep;
 
--- 1. Base Reference Tables
 
 -- Department Table
 CREATE TABLE Department (
@@ -26,7 +26,6 @@ CREATE TABLE Status_Category (
 ) ENGINE=InnoDB;
 
 -- Transfer Status Table
--- Each status (e.g., "Awaiting Review", "Sent Back for Info") belongs to a Category
 CREATE TABLE Transfer_Status (
     StatusID INT AUTO_INCREMENT PRIMARY KEY,
     StatusName VARCHAR(100) NOT NULL UNIQUE,
@@ -40,7 +39,6 @@ CREATE TABLE Grade (
     GradeCode CHAR(2) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
--- 2. People and Department Relations
 
 -- Advisor Table
 CREATE TABLE Advisor (
@@ -62,7 +60,6 @@ CREATE TABLE Student (
     FOREIGN KEY (AdvisorID) REFERENCES Advisor(AdvisorID)
 ) ENGINE=InnoDB;
 
--- 3. Courses and Equivalencies
 
 -- Incoming Course Table
 CREATE TABLE Incoming_Course (
@@ -96,7 +93,6 @@ CREATE TABLE Course_Equivalency (
     FOREIGN KEY (Equivalent_CourseID) REFERENCES Equivalent_Course(Equivalent_CourseID)
 ) ENGINE=InnoDB;
 
--- 4. Forms, Transfers, and Teams
 
 -- TCEP Form Table
 CREATE TABLE TCEP_Form (
@@ -159,7 +155,6 @@ CREATE TABLE Transfers_Team (
     FOREIGN KEY (TeamMemberID) REFERENCES Team_Members(TeamMemberID)
 ) ENGINE=InnoDB;
 
--- 5. Status History
 
 -- TCEP Status History Table
 CREATE TABLE TCEP_Status_History (
