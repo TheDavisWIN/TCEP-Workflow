@@ -170,3 +170,10 @@ CREATE TABLE TCEP_Status_History (
     FOREIGN KEY (AdvisorID) REFERENCES Advisor(AdvisorID),
     FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
 ) ENGINE=InnoDB;
+
+-- One-time cleanup utility to remove recipient information from existing Comments
+-- This will remove patterns like " (Recipients: Name1, Name2)" from all history entries
+-- Uncomment and run this once if you need to clean up existing data
+-- UPDATE TCEP_Status_History 
+-- SET Comments = REGEXP_REPLACE(Comments, ' \\(Recipients:.*\\)$', '') 
+-- WHERE Comments LIKE '% (Recipients:%';
