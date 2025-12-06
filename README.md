@@ -10,7 +10,7 @@
 
 --Setting up the database
 
-- Download the “tcep.sql” file from the Github repository
+- Download the “tcepV3.sql” file from the Github repository
 - In your localhost tab, click “Databases” in the top navigation bar
 - In the box that says “Create database”, enter “tcep” into the text field, then click “Create”
 - A new database has been created, make sure it is selected in the left panel
@@ -19,7 +19,7 @@
 - Scroll down to the box that says “Other options” and disable the option that says “Enable foreign key checks”
 - All the way at the bottom is the “Import” button, click on it
 - If you scroll up, you’ll see text in the “File to import:” box that says "Please be patient, the file is being uploaded.” Wait for the file to import
-- If you were successful, there will be a message that says “Import has been successfully finished, 370 queries executed. (tcep.sql)”
+- If you were successful, there will be a message that says “Import has been successfully finished, 370 queries executed. (tcepV3.sql)”
 - The most recent version of the database is now set up
 
 
