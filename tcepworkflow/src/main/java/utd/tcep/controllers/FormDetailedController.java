@@ -1214,6 +1214,11 @@ public class FormDetailedController {
             System.err.println("Error loading form data: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // IF no form is found, we are creating a new form, enter Edit mode
+        if (currentForm != null && currentForm.getId() == 0) {
+                handleEdit();
+        }
         
         loadingForm = false;
     }
