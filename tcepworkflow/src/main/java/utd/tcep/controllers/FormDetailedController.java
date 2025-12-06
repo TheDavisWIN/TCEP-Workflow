@@ -690,9 +690,8 @@ public class FormDetailedController {
                 // Get or create "Approved" status (CategoryID 2 = Approved)
                 int approvedStatusId = TCEPDatabaseService.getOrCreateStatusId("Approved", 2);
                 
-                String formattedReason = String.format("Approved%s%s", 
-                    reason != null && !reason.trim().isEmpty() ? ": " + reason : "",
-                    !recipients.isEmpty() ? " (Recipients: " + String.join(", ", recipients) + ")" : "");
+                String formattedReason = String.format("Approved%s", 
+                    reason != null && !reason.trim().isEmpty() ? ": " + reason : "");
                 
                 TCEPDatabaseService.addStatusHistory(currentForm.getId(), approvedStatusId, 
                     formattedReason, null);
@@ -959,6 +958,8 @@ public class FormDetailedController {
         }
         
         // Create status history entry for each recipient advisor
+        String reviewerName = currentUser != null ? currentUser.getAdvisorName() : "Unknown";
+        
         for (String recipientName : recipients) {
             // Check if this is a department label (not an advisor name)
             if (recipientName.contains("Department")) {
@@ -972,7 +973,8 @@ public class FormDetailedController {
                 System.out.println("Creating status history for recipient: " 
                     + recipientName + " (ID: " + advisorId + ")");
                 try {
-                    // Create status history entry - this makes the form appear in recipient's list
+                    // Create status history entry with recipient in AdvisorID (for workflow routing)
+                    // and reviewer name will be retrieved separately
                     TCEPDatabaseService.addStatusHistoryWithAdvisor(formId, newStatusId, comments, advisorId, null);
                     System.out.println("Successfully added status history for advisor " + advisorId);
                 } catch (SQLException e) {

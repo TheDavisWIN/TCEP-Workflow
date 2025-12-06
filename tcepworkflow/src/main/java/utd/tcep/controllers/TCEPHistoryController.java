@@ -62,9 +62,18 @@ public class TCEPHistoryController {
     private void loadHistory() {
         ObservableList<TCEPStatusHistory> historyList = FXCollections.observableArrayList();
 
-    String sql = "SELECT h.Changed_On, h.Comments, a.Advisor_Name " +
+    String sql = "SELECT h.Changed_On, h.Comments, " +
+             "COALESCE(" +
+             "  (SELECT a2.Advisor_Name FROM TCEP_Status_History h2 " +
+             "   JOIN Advisor a2 ON h2.AdvisorID = a2.AdvisorID " +
+             "   WHERE h2.FormID = h.FormID AND h2.Changed_On < h.Changed_On " +
+             "   ORDER BY h2.Changed_On DESC LIMIT 1), " +
+             "  (SELECT a3.Advisor_Name FROM TCEP_Form f " +
+             "   JOIN Student s ON f.StudentID = s.StudentID " +
+             "   JOIN Advisor a3 ON s.AdvisorID = a3.AdvisorID " +
+             "   WHERE f.FormID = h.FormID)" +
+             ") as Reviewer_Name " +
              "FROM TCEP_Status_History h " +
-             "LEFT JOIN Advisor a ON h.AdvisorID = a.AdvisorID " +
              "WHERE h.FormID = ? " +
              "ORDER BY h.Changed_On DESC";
 
@@ -78,7 +87,7 @@ public class TCEPHistoryController {
                 TCEPStatusHistory entry = new TCEPStatusHistory(
                     rs.getTimestamp("Changed_On").toLocalDateTime(),
                     rs.getString("Comments"),
-                    rs.getString("Advisor_Name")
+                    rs.getString("Reviewer_Name")
                 );
                 historyList.add(entry);
             }
