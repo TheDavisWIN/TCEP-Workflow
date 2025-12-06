@@ -148,29 +148,38 @@ public class NavigationController {
     // Swap between different views and load FXML when navigation buttons are clicked
     // Ryan Pham (rkp200003)
     // Davis Huynh (dxh170005) (added Login view)
-    public void swapView(View view) {
-        // Reset edit mode when navigating away from detailed view
-        if (view == View.Table || view == View.Login) {
-            formDetailedController.resetEditMode();
-        }
-        
-        loginView.setVisible(false);
-        formDetailedView.setVisible(false);
-        formTableView.setVisible(false);
+  public void swapView(View view) {
+    // Always clear column 1 first — THIS IS THE KEY FIX
+    appGridPane.getChildren().removeIf(node -> {
+        Integer col = GridPane.getColumnIndex(node);
+        return col != null && col == 1;
+    });
 
-        switch (view) {
-            case Login:
-                loginView.setVisible(true);
-                break;
-            case Detailed:
-                formDetailedView.setVisible(true);
-                break;
-            case Table:
-                formTableView.setVisible(true);
-                formDetailedController.onNavigatedAway();
-                break;
-        }
+    // Reset edit mode when leaving detailed view
+    if (view == View.Table || view == View.Login) {
+        formDetailedController.resetEditMode();
     }
+
+    loginView.setVisible(false);
+    formDetailedView.setVisible(false);
+    formTableView.setVisible(false);
+
+    switch (view) {
+        case Login:
+            loginView.setVisible(true);
+            appGridPane.add(loginView, 1, 0);
+            break;
+        case Detailed:
+            formDetailedView.setVisible(true);
+            appGridPane.add(formDetailedView, 1, 0);
+            break;
+        case Table:
+            formTableView.setVisible(true);
+            appGridPane.add(formTableView, 1, 0);
+            formDetailedController.onNavigatedAway();
+            break;
+    }
+}
 
     public GridPane getAppGridPane() {
     return appGridPane;
